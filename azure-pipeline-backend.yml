@@ -32,10 +32,10 @@ stages:
           - task: AzureCLI@2
             inputs:
               azureSubscription: 'azure-sp-connection'
-              scriptType: bash
+              scriptType: 'ps'
               scriptLocation: inlineScript
               inlineScript: |
-                echo "Azure login done" 
+                az --version 
 
           - task: TerraformTaskV1@0
             inputs: 
@@ -71,10 +71,10 @@ stages:
         - task: AzureCLI@2
           inputs:
             azureSubscription: 'azure-sp-connection'
-            scriptType: bash
+            scriptType: 'ps'
             scriptLocation: inlineScript
             inlineScript: |
-              echo "Azure login done" 
+              Write-Host "Azure login done" 
               
         - task: DownloadPipelineArtifact@2
           inputs:
