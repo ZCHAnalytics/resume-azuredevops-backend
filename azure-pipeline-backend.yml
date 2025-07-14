@@ -1,3 +1,4 @@
+name: backend-infrastructure
 trigger:
   branches:
     include:
