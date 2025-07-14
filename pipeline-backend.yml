@@ -1,113 +1,112 @@
 trigger:
-    branches:
-        include:
-            - main
+  branches:
+    include:
+      - main
 
-    paths:
-      include:
-        - 'iaac/*'
-        - 'azure-pipelines.yml'
+  paths:
+    include:
+      - 'iaac/*'
+      - 'azure-pipelines.yml'
 
 
 variables:
-    terraformWorkingDir: 'iaac'
-    backendWorkingDir: 'backend'
+  terraformWorkingDir: 'iaac'
+  backendWorkingDir: 'backend'
 
 stages:
-    - stage: PlanBackEndInfra
-        displayName: 'Plan Backend Infrastructure'
-        jobs:
-          - job: TerraformPlan
-            displayName: 'Terraform Plan'
-            pool:
-              vmImage: 'ubuntu_latest'
-            steps: 
-              - task: Checkout@1
+  - stage: PlanBackEndInfra
+    displayName: 'Plan Backend Infrastructure'
+    jobs:
+      - job: TerraformPlan
+        displayName: 'Terraform Plan'
+        pool:
+          vmImage: 'ubuntu_latest'
+        steps: 
+          - task: Checkout@1
               
-              - script: ls -R
-                displayName: 'List files for debug only'
+          - script: ls -R
+            displayName: 'List files for debug only'
 
-              - task: AzureCLI@2
-                inputs:
-                    azureSubscription: 'azure-sp-connection'
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    inlineScript: |
-                      echo "Azure login done" 
-
-              - task: TerraformInstaller@1
-                inputs:
-                  terraformVersion: latest
-
-              - script: |
-                  terraform plan -co-color -var-file="terraform.tfvars" -out=plan.tfplan
-                displayName: 'Terraform Plan'
-                workingDirectory: $(terraformWorkingDir)
-
-              - task: PublishBuildArtifcats@1
-                inputs: 
-                  PathtoPublish: '$(terraformWorkingDir)/plan.tfplan'
-                  ArtifactName: 'terraform-plan'
-                  publishLocation: 'pipeline'    
-
-    - stage: ApplyBackendInfra
-      displayName: 'Apply Backend Infrastructure'
-      dependsOn: PlanBackendInfra
-      conditionL succeeded()
-      jobs:
-        - job: TerraformApply
-          displayName: 'terraform Apply'
-          pool:
-            vmImage: 'bubuntu-latest'
-          steps: 
-            - task: checkout@1
-
-            - task: AzureCLI@2
-              inputs:
-                azureSubscription: 'azure-sp-connection'
-                scriptType: bash
-                scriptLocation: inlineScript
-                inlineScript: |
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'azure-sp-connection'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
                 echo "Azure login done" 
 
-            - task: TerraformInstaller@1
-              inputs: 
-                terraformVersion: 'latest'
+          - task: TerraformInstaller@1
+            inputs:
+            terraformVersion: latest
 
-            - download: current
-              artifact: terraform-plan
-            
-            - script: terraform init
-              displayName: 'Terraform Init'
-              workingDirectory: $(terraformWorkingDir)
-
-            - script: terraform apply -no-color -auto-approve plan.tfplan
-              displayName: 'Terraform Apply'
-              workingDirectory: $(terraformWorkingDir)
-
-            - script: | 
-              echo "### Backend Infrastructure Deployed!" >> $(System.DefaultWorkingDirectory)
-
-              Cosmos_KEY=$(terraform output -raw cosmosdb_primary_key || echo "")
-
-              if [ -z "$Cosmos_KEY" ]; then
-                echo "Error: cosmosdb_primary_key not found"
-                exit 1
-              fi
-
-              FUNC_URL=$(terraform output -raw function_app_url | grep -E '^https://[^ ]+$' || echo "")
-
-              echo "- **Function App Name**: zch-resume-function-app" >> $(System.DefaultWorkingDirectory)/summary.md
-              echo "⏳ **Next Step**: Function code will be deployed automatically" >> $(System.DefaultWorkingDirectory)/summary.md
-            
+          - script: |
+            terraform plan -co-color -var-file="terraform.tfvars" -out=plan.tfplan
+            displayName: 'Terraform Plan'
             workingDirectory: $(terraformWorkingDir)
-            displayName: 'Output Summary'
 
-            - task: PublishPipelineArtifact@1
-              inputs:
-                targetPath: '$(System.DefaultWorkingDirectory)/summary.md'
-                artifactName: 'infra-summary'
+          - task: PublishBuildArtifcats@1
+            inputs: 
+              PathtoPublish: '$(terraformWorkingDir)/plan.tfplan'
+              ArtifactName: 'terraform-plan'
+              publishLocation: 'pipeline'    
 
+  - stage: ApplyBackendInfra
+    displayName: 'Apply Backend Infrastructure'
+    dependsOn: PlanBackendInfra
+    conditionL succeeded()
+    jobs:
+      - job: TerraformApply
+        displayName: 'terraform Apply'
+        pool:
+          vmImage: 'bubuntu-latest'
+        steps: 
+        - task: checkout@1
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-sp-connection'
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+            echo "Azure login done" 
+
+        - task: TerraformInstaller@1
+          inputs: 
+            terraformVersion: 'latest'
+
+        - download: current
+          artifact: terraform-plan
+            
+        - script: terraform init
+          displayName: 'Terraform Init'
+          workingDirectory: $(terraformWorkingDir)
+
+        - script: terraform apply -no-color -auto-approve plan.tfplan
+          displayName: 'Terraform Apply'
+          workingDirectory: $(terraformWorkingDir)
+
+        - script: | 
+          echo "### Backend Infrastructure Deployed!" >> $(System.DefaultWorkingDirectory)
+
+          Cosmos_KEY=$(terraform output -raw cosmosdb_primary_key || echo "")
+
+          if [ -z "$Cosmos_KEY" ]; then
+            echo "Error: cosmosdb_primary_key not found"
+            exit 1
+          fi
+
+          FUNC_URL=$(terraform output -raw function_app_url | grep -E '^https://[^ ]+$' || echo "")
+
+          echo "- **Function App Name**: zch-resume-function-app" >> $(System.DefaultWorkingDirectory)/summary.md
+          echo "⏳ **Next Step**: Function code will be deployed automatically" >> $(System.DefaultWorkingDirectory)/summary.md
+          
+          workingDirectory: $(terraformWorkingDir)
+          displayName: 'Output Summary'
+
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/summary.md'
+              artifactName: 'infra-summary'
     
 
 
