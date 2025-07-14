@@ -28,9 +28,6 @@ stages:
           name: 'Default'
         steps: 
           - checkout: self
-              
-          - script: ls -R
-            displayName: 'List files for debug only'
 
           - task: AzureCLI@2
             inputs:
