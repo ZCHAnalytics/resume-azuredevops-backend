@@ -40,9 +40,10 @@ stages:
               inlineScript: |
                 echo "Azure login done" 
 
-          - task: TerraformInstaller@1
-            inputs:
-              terraformVersion: 'latest'
+          - task: TerraformCLI@0
+            inputs: 
+              command: 'init'
+              workingDirecotry: $(terraformWorkingDir)
 
           - script: |
               terraform plan -co-color -var-file="terraform.tfvars" -out=plan.tfplan
