@@ -49,12 +49,6 @@ stages:
             displayName: 'Terraform Plan'
             workingDirectory: $(terraformWorkingDir)
 
-          - task: PublishBuildArtifacts@1
-            inputs: 
-              PathtoPublish: '$(terraformWorkingDir)/plan.tfplan'
-              ArtifactName: 'terraform-plan'
-              publishLocation: 'pipeline'    
-
   - stage: ApplyBackendInfra
     displayName: 'Apply Backend Infrastructure'
     dependsOn: PlanBackendInfra
@@ -65,7 +59,7 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         steps: 
-        - task: self
+        - checkout: self
 
         - task: AzureCLI@2
           inputs:
@@ -73,7 +67,7 @@ stages:
             scriptType: bash
             scriptLocation: inlineScript
             inlineScript: |
-            echo "Azure login done" 
+              echo "Azure login done" 
 
         - task: TerraformInstaller@1
           inputs: 
@@ -91,27 +85,24 @@ stages:
           workingDirectory: $(terraformWorkingDir)
 
         - script: | 
-          echo "### Backend Infrastructure Deployed!" >> $(System.DefaultWorkingDirectory)
+            echo "### Backend Infrastructure Deployed!" >> $(System.DefaultWorkingDirectory)
 
-          Cosmos_KEY=$(terraform output -raw cosmosdb_primary_key || echo "")
+            Cosmos_KEY=$(terraform output -raw cosmosdb_primary_key || echo "")
 
-          if [ -z "$Cosmos_KEY" ]; then
-            echo "Error: cosmosdb_primary_key not found"
-            exit 1
-          fi
+            if [ -z "$Cosmos_KEY" ]; then
+              echo "Error: cosmosdb_primary_key not found"
+              exit 1
+            fi
 
-          FUNC_URL=$(terraform output -raw function_app_url | grep -E '^https://[^ ]+$' || echo "")
+            FUNC_URL=$(terraform output -raw function_app_url | grep -E '^https://[^ ]+$' || echo "")
 
-          echo "- **Function App Name**: zch-resume-function-app" >> $(System.DefaultWorkingDirectory)/summary.md
-          echo "⏳ **Next Step**: Function code will be deployed automatically" >> $(System.DefaultWorkingDirectory)/summary.md
+            echo "- **Function App Name**: zch-resume-function-app" >> $(System.DefaultWorkingDirectory)/summary.md
+            echo "⏳ **Next Step**: Function code will be deployed automatically" >> $(System.DefaultWorkingDirectory)/summary.md
           
           workingDirectory: $(terraformWorkingDir)
           displayName: 'Output Summary'
 
-          - task: PublishPipelineArtifact@1
-            inputs:
-              targetPath: '$(System.DefaultWorkingDirectory)/summary.md'
-              artifactName: 'infra-summary'
-    
-
-
+        - task: PublishPipelineArtifact@1
+          inputs:
+            targetPath: '$(System.DefaultWorkingDirectory)/summary.md'
+            artifactName: 'infra-summary'
