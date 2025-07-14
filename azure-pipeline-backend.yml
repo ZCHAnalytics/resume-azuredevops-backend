@@ -12,7 +12,7 @@ trigger:
       - 'azure-pipeline-backend.yml'
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: 'Default'
 
 variables:
   terraformWorkingDir: 'iaac'
@@ -25,7 +25,7 @@ stages:
       - job: TerraformPlan
         displayName: 'Terraform Plan'
         pool:
-          vmImage: 'ubuntu-latest'
+          name: 'Default'
         steps: 
           - checkout: self
               
@@ -67,7 +67,7 @@ stages:
       - job: TerraformApply
         displayName: 'terraform Apply'
         pool:
-          vmImage: 'ubuntu-latest'
+          name: 'Default'
         steps: 
         - checkout: self
 
