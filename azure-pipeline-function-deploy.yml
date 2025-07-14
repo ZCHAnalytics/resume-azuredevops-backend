@@ -40,41 +40,41 @@ jobs:
           sudo apt-get install -y azure-functions-core-tools-4
         displayName: 'Install Azure Functions Core Tools'
 
-        # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
-        - task: AzureCLI@2
-          inputs:
-            azureSubscription: 'azure-sp-connection' # replace with service principal connection name with new client id secret
-            scriptType: 'bash'
-            scriptLocation: 'inlineScript'
-            inlineScript: |
-              echo "Logged in to Azure CLI"
+      # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'azure-sp-connection' # replace with service principal connection name with new client id secret
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            echo "Logged in to Azure CLI"
 
-        # Deploy the Azure Function
-        - script: |
-            pip install -r backend/requirements.txt
-            func azure functionapp publish zch-resume-function-app --python
-          displayName: 'Deploy Azure Function'
+      # Deploy the Azure Function
+      - script: |
+          pip install -r backend/requirements.txt
+          func azure functionapp publish zch-resume-function-app --python
+        displayName: 'Deploy Azure Function'
 
-        # Test the deployed function
-        - script: |
-            echo "Testing Function Deployment 🧪"
-            sleep 30
-            response=$(curl -s https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123)
-            echo "Response: $response"
-          displayName: 'Test Azure Function'
+      # Test the deployed function
+      - script: |
+          echo "Testing Function Deployment 🧪"
+          sleep 30
+          response=$(curl -s https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123)
+          echo "Response: $response"
+        displayName: 'Test Azure Function'
  
-        # Optional: List backend directory contents (for debugging)
-          - script: |
-              echo "Backend directory contents:"
-              ls -la backend/
-            displayName: 'List Backend Directory'
+      # Optional: List backend directory contents (for debugging)
+      - script: |
+          echo "Backend directory contents:"
+          ls -la backend/
+        displayName: 'List Backend Directory'
         
-        # Optional: Run backend tests if available
-        - script: |
-            if [ -f "backend/tests/auth_tests.py" ]; then
-              pip install pytest requests
-              pytest backend/tests/auth_tests.py
-            else
-              echo "auth_tests.py not found"
-            fi
-          displayName: 'Run Backend Auth Tests'
+      # Optional: Run backend tests if available
+      - script: |
+          if [ -f "backend/tests/auth_tests.py" ]; then
+            pip install pytest requests
+            pytest backend/tests/auth_tests.py
+          else
+            echo "auth_tests.py not found"
+          fi
+        displayName: 'Run Backend Auth Tests'
