@@ -9,6 +9,8 @@ trigger:
       - 'iaac/*'
       - 'azure-pipeline-backend.yml'
 
+pool:
+  vmImage: 'ubuntu-latest'
 
 variables:
   terraformWorkingDir: 'iaac'
