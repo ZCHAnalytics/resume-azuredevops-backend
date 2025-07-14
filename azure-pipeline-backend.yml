@@ -40,14 +40,13 @@ stages:
               inlineScript: |
                 echo "Azure login done" 
 
-          - task: TerraformCLI@0
-            displayName: 'Terraform Init'
+          - task: TerraformTaskV1@0
             inputs: 
               provider: 'azurerm'
               command: 'init'
               workingDirectory: $(terraformWorkingDir)
 
-          - task: TerraformCLI@0
+          - task: TerraformTaskV2@0
             displayName: 'Terraform Plan'
             inputs: 
               provider: 'azurerm'
@@ -84,11 +83,6 @@ stages:
           inputs:
             artifactName: 'terraform-plan'
             targetPath: '$(terraformWorkingDir)'
-
-        - task: TerraformCLI@0
-          inputs: 
-            command: 'init'
-            workingDirecotry: $(terraformWorkingDir)
             
         - script: terraform init
           displayName: 'Terraform Init'
