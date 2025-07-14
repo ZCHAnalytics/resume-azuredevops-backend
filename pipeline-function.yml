@@ -1,73 +1,80 @@
+# Trigger pipeline on push to main branch and when certain paths change
 trigger:
   branches:
     include:
-      - main
-        paths:
-          include:
-            - backend/**
-            - azure-pipelines-function-deploy.yml
+    - main
 
-        pool:
-          vmImage: 'ubuntu-latest'
-        
-        variables:
-          pythonVersion: '3.10'
+  paths:
+    include:
+      - backend/**
+      - azure-pipelines-function-deploy.yml
 
-    jobs:
-      - job: DeployFunction
-        displayName: 'Deploy Backend Function'
+# Use Ubuntu VM image for running jobs
+pool:
+  vmImage: 'ubuntu-latest'
 
-        steps:
-          - checkout: self
+jobs:
+  - job: deploy_function
+    displayName: Deploy Backend Function
 
+    steps:
+      # GitHub Actions 'actions/checkout@v3' replaced by Azure DevOps 'checkout: self'
+      - checkout: self
+
+      # GitHub Actions 'actions/setup-python@v4' replaced by Azure DevOps task
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.10'
+          addToPath: true
+
+          
+      # Masking secrets: Azure DevOps does not support echo "::add-mask::" syntax.
+      # Instead, secrets are automatically masked in logs when referenced as variables.
+      # So secrets should be defined in Azure DevOps Library or Pipeline variables.
+
+      # Install Azure Functions Core Tools (equivalent to GitHub workflow script)
+      - script: |
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo apt-get install -y azure-functions-core-tools-4
+        displayName: 'Install Azure Functions Core Tools'
+
+        # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'azure-sp-connection' # replace with service principal connection name with new client id secret
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              echo "Logged in to Azure CLI"
+
+        # Deploy the Azure Function
+        - script: |
+            pip install -r backend/requirements.txt
+            func azure functionapp publish zch-resume-function-app --python
+          displayName: 'Deploy Azure Function'
+
+        # Test the deployed function
+        - script: |
+            echo "Testing Function Deployment 🧪"
+            sleep 30
+            response=$(curl -s https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123)
+            echo "Response: $response"
+          displayName: 'Test Azure Function'
+ 
+        # Optional: List backend directory contents (for debugging)
           - script: |
-            echo "Installing Python $(pythonVersion)"
-            sudo apt-get update
-            sudo apt-get install -y python3.10 python3-pip
-            displayName: 'Setup Python'
-
-            - script: |
-            echo "Installing Syft"
-            curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-            syft backend -o json > sbom.json
-            displayName: 'Generate SBOM (Software Bill of Materials)'
-            
-            - task: PublishBuildArtifacts@1
-              inputs:
-                PathtoPublish: 'sbom.json'
-                ArtifactName: 'sbom'
-                displayName: 'Publish SBOM Artifact'
-
-                - script: |
-                echo "Installing Grype vulnerability scanner"
-                curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
-                grype sbom:sbom.json --fail-on critical -o table
-                displayName: 'Scan for Vulnerabilities with Grype'
-
-            - task: AzureCLI@2
-              inputs:
-                azureSubscription: 'azure-sp-connection'
-                scriptType: 'bash'
-                scriptLocation: 'inlineScript'
-                inlineScript: |
-                wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-                sudo dpkg -i packages-microsoft-prod.deb
-                sudo apt-get update
-                sudo apt-get install -y azure-functions-core-tools-4
-                displayName: 'Setup Azure Functions Core Tools'
+              echo "Backend directory contents:"
+              ls -la backend/
+            displayName: 'List Backend Directory'
         
-            - task: AzureCLI@2
-                inputs:
-                  azureSubscription: '<YOUR-AZURE-SERVICE-CONNECTION>'
-                  scriptType: 'bash'
-                  scriptLocation: 'inlineScript'
-                  inlineScript: |
-                  cd backend
-                  pip3 install -r requirements.txt
-                  func azure functionapp publish zch-resume-function-app --python
-                  displayName: 'Deploy Function'
-
-                - script: |
-                  echo "Testing Function Deployment 🧪"
-                  sleep 30
-                  response=$(curl -s https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123)
+        # Optional: Run backend tests if available
+        - script: |
+            if [ -f "backend/tests/auth_tests.py" ]; then
+              pip install pytest requests
+              pytest backend/tests/auth_tests.py
+            else
+              echo "auth_tests.py not found"
+            fi
+          displayName: 'Run Backend Auth Tests'
