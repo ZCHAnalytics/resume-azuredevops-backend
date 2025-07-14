@@ -69,12 +69,10 @@ stages:
             inlineScript: |
               echo "Azure login done" 
 
-        - task: TerraformInstaller@1
+        - task: TerraformCLI@0
           inputs: 
-            terraformVersion: 'latest'
-
-        - download: current
-          artifact: terraform-plan
+            command: 'init'
+            workingDirecotry: $(terraformWorkingDir)
             
         - script: terraform init
           displayName: 'Terraform Init'
