@@ -1,4 +1,5 @@
 # Trigger pipeline on push to main branch and when certain paths change
+name: backend-function-deploy
 trigger:
   branches:
     include:
