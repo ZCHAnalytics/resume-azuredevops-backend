@@ -18,6 +18,11 @@ variables:
   terraformWorkingDir: 'iaac'
   backendWorkingDir: 'backend'
 
+  tfstateResourceGroup: 'tfstate-rg'
+  tfstateStorageAccount: 'zchtfstatestorageacc'
+  tfstateContainer: 'tfstate'
+  tfstateKey: 'terraform.tfstate'
+
 stages:
   - stage: PlanBackendInfra
     displayName: 'Plan Backend Infrastructure'
@@ -42,6 +47,10 @@ stages:
               provider: 'azurerm'
               command: 'init'
               backendServiceArm: 'azure-sp-connection'
+              backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
+              backendAzureRmStorageAccountName: '$(tfstateStorageAccount)'
+              backendAzureRmContainerName: '$(tfstateContainer)'
+              backendAzureRmKey: '$(tfstateKey)'
               workingDirectory: $(terraformWorkingDir)
 
           - task: TerraformTaskV2@0
