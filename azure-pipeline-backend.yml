@@ -41,14 +41,24 @@ stages:
                 echo "Azure login done" 
 
           - task: TerraformCLI@0
+            displayName: 'Terraform Init'
             inputs: 
+              provider: 'azurerm'
               command: 'init'
-              workingDirecotry: $(terraformWorkingDir)
+              workingDirectory: $(terraformWorkingDir)
 
-          - script: |
-              terraform plan -co-color -var-file="terraform.tfvars" -out=plan.tfplan
+          - task: TerraformCLI@0
             displayName: 'Terraform Plan'
-            workingDirectory: $(terraformWorkingDir)
+            inputs: 
+              provider: 'azurerm'
+              command: 'plan'
+              workingDirectory: $(terraformWorkingDir)
+              commandOptions: '-var-file="terraform.tfvars" -out=plan.tfplan'
+          
+          - task: PublishPipelineArtifact@1
+            inputs: 
+              targetpath: '$(terraformWorkingDir)/plan.tfplan'
+              artifactName: 'terraform-plan'
 
   - stage: ApplyBackendInfra
     displayName: 'Apply Backend Infrastructure'
@@ -69,6 +79,11 @@ stages:
             scriptLocation: inlineScript
             inlineScript: |
               echo "Azure login done" 
+              
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: 'terraform-plan'
+            targetPath: '$(terraformWorkingDir)'
 
         - task: TerraformCLI@0
           inputs: 
