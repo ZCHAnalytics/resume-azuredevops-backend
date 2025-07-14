@@ -7,7 +7,7 @@ This repository contains the backend API for the Cloud Resume Challenge, impleme
 This backend service powers the unique visitor counter on the frontend resume site and exposes API endpoints for visitor tracking.
 
 ### Challenge Steps Completed & Enhancements
-
+- AzureDevops
 - Built using **Python Azure Functions** with Cosmos DB for persistent, scalable data storage.
 - Fully automated infrastructure deployment via **Terraform**, managed through GitHub Actions.
 - Implemented **CI/CD pipelines** that:
