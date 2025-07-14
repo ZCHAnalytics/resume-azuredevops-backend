@@ -41,6 +41,7 @@ stages:
             inputs: 
               provider: 'azurerm'
               command: 'init'
+              backendServiceArm: 'azure-sp-connection'
               workingDirectory: $(terraformWorkingDir)
 
           - task: TerraformTaskV2@0
