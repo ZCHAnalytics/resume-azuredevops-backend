@@ -1,4 +1,6 @@
+
 name: backend-infrastructure
+
 trigger:
   branches:
     include:
@@ -17,15 +19,15 @@ variables:
   backendWorkingDir: 'backend'
 
 stages:
-  - stage: PlanBackEndInfra
+  - stage: PlanBackendInfra
     displayName: 'Plan Backend Infrastructure'
     jobs:
       - job: TerraformPlan
         displayName: 'Terraform Plan'
         pool:
-          vmImage: 'ubuntu_latest'
+          vmImage: 'ubuntu-latest'
         steps: 
-          - task: Checkout@1
+          - checkout: self
               
           - script: ls -R
             displayName: 'List files for debug only'
@@ -40,14 +42,14 @@ stages:
 
           - task: TerraformInstaller@1
             inputs:
-            terraformVersion: latest
+              terraformVersion: 'latest'
 
           - script: |
-            terraform plan -co-color -var-file="terraform.tfvars" -out=plan.tfplan
+              terraform plan -co-color -var-file="terraform.tfvars" -out=plan.tfplan
             displayName: 'Terraform Plan'
             workingDirectory: $(terraformWorkingDir)
 
-          - task: PublishBuildArtifcats@1
+          - task: PublishBuildArtifacts@1
             inputs: 
               PathtoPublish: '$(terraformWorkingDir)/plan.tfplan'
               ArtifactName: 'terraform-plan'
@@ -56,14 +58,14 @@ stages:
   - stage: ApplyBackendInfra
     displayName: 'Apply Backend Infrastructure'
     dependsOn: PlanBackendInfra
-    conditionL succeeded()
+    condition: succeeded()
     jobs:
       - job: TerraformApply
         displayName: 'terraform Apply'
         pool:
-          vmImage: 'bubuntu-latest'
+          vmImage: 'ubuntu-latest'
         steps: 
-        - task: checkout@1
+        - task: self
 
         - task: AzureCLI@2
           inputs:
