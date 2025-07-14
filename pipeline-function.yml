@@ -1,0 +1,73 @@
+trigger:
+  branches:
+    include:
+      - main
+        paths:
+          include:
+            - backend/**
+            - azure-pipelines-function-deploy.yml
+
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        variables:
+          pythonVersion: '3.10'
+
+    jobs:
+      - job: DeployFunction
+        displayName: 'Deploy Backend Function'
+
+        steps:
+          - checkout: self
+
+          - script: |
+            echo "Installing Python $(pythonVersion)"
+            sudo apt-get update
+            sudo apt-get install -y python3.10 python3-pip
+            displayName: 'Setup Python'
+
+            - script: |
+            echo "Installing Syft"
+            curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+            syft backend -o json > sbom.json
+            displayName: 'Generate SBOM (Software Bill of Materials)'
+            
+            - task: PublishBuildArtifacts@1
+              inputs:
+                PathtoPublish: 'sbom.json'
+                ArtifactName: 'sbom'
+                displayName: 'Publish SBOM Artifact'
+
+                - script: |
+                echo "Installing Grype vulnerability scanner"
+                curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+                grype sbom:sbom.json --fail-on critical -o table
+                displayName: 'Scan for Vulnerabilities with Grype'
+
+            - task: AzureCLI@2
+              inputs:
+                azureSubscription: 'azure-sp-connection'
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+                sudo dpkg -i packages-microsoft-prod.deb
+                sudo apt-get update
+                sudo apt-get install -y azure-functions-core-tools-4
+                displayName: 'Setup Azure Functions Core Tools'
+        
+            - task: AzureCLI@2
+                inputs:
+                  azureSubscription: '<YOUR-AZURE-SERVICE-CONNECTION>'
+                  scriptType: 'bash'
+                  scriptLocation: 'inlineScript'
+                  inlineScript: |
+                  cd backend
+                  pip3 install -r requirements.txt
+                  func azure functionapp publish zch-resume-function-app --python
+                  displayName: 'Deploy Function'
+
+                - script: |
+                  echo "Testing Function Deployment 🧪"
+                  sleep 30
+                  response=$(curl -s https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123)
