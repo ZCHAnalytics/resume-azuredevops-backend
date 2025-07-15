@@ -48,15 +48,14 @@ stages:
               provider: 'azurerm'
               command: 'init'
               allowBackendServiceOverride: false # As V4 expects backend values
-
-              workingDirectory: $(terraformWorkingDir)
+              workingDirectory: '$(terraformWorkingDir)'
 
           - task: TerraformTaskV4@0
             displayName: 'Terraform Plan'
             inputs: 
               provider: 'azurerm'
               command: 'plan'
-              workingDirectory: $(terraformWorkingDir)
+              workingDirectory: '$(terraformWorkingDir)'
               commandOptions: '-var-file="terraform.tfvars" -out=plan.tfplan'
           
           - task: PublishPipelineArtifact@1
@@ -91,11 +90,11 @@ stages:
             
         - script: terraform init
           displayName: 'Terraform Init'
-          workingDirectory: $(terraformWorkingDir)
+          workingDirectory: '$(terraformWorkingDir)'
 
         - script: terraform apply -no-color -auto-approve plan.tfplan
           displayName: 'Terraform Apply'
-          workingDirectory: $(terraformWorkingDir)
+          workingDirectory: '$(terraformWorkingDir)'
 
         - script: | 
             echo "### Backend Infrastructure Deployed!" >> $(System.DefaultWorkingDirectory)
