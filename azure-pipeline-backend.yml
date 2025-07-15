@@ -77,11 +77,11 @@ stages:
               workingDirectory: '$(terraformWorkingDir)'
               commandOptions: -var-file="terraform.tfvars" -out=plan.tfplan
 
-          - script: |
+          - powershell: |
               echo Listing files in $(terraformWorkingDir)
               dir $(terraformWorkingDir)
             displayName: 'Debug: List files after Terraform Plan'
-            pwsh: true
+
 
           
           # ⬆️ Publish plan file as pipeline artifact
