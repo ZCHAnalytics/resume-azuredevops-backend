@@ -1,0 +1,44 @@
+name: Cypress E2E Tests
+
+on:
+  workflow_run:
+    workflows: ["CI/CD - Backend"]
+    types:
+      - completed
+  workflow_dispatch: # Manual testing
+
+jobs:
+  e2e-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for frontend (CDN) to be available
+        run: |
+          for i in {1..10}; do
+            echo "Checking if frontend is available (attempt $i)..."
+            if curl -sSf https://shecodesclouds.azureedge.net > /dev/null; then
+              echo "Frontend is available!"
+              break
+            fi
+            echo "Not ready yet. Retry in 10 seconds..."
+            sleep 10
+          done
+
+      - name: Run Cypress Tests
+        run: |
+          npx cypress install
+          npx cypress run \
+            --config baseUrl=https://shecodesclouds.azureedge.net,supportFile=false \
+            --env apiUrl=https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter

@@ -1,0 +1,62 @@
+# ------------------------------------------------------------------
+# Pipeline: Backend Function Deployment
+# Description: Deploys the backend Azure Function app on pushes to main branch
+# Triggers on changes in backend directory and pipeline YAML file
+# ------------------------------------------------------------------
+
+name: backend-function-deploy
+trigger:
+  branches:
+    include:
+    - main
+
+  paths:
+    include:
+      - backend/**
+      - azure-pipelines/backend-function.yml
+
+# Use local agent 
+pool:
+  name: 'Default'
+
+jobs:
+  - job: deploy_function
+    displayName: Deploy Backend Function
+    pool: 
+      name: 'Default'
+
+    steps:
+      # Checkout repository source code
+      - checkout: self
+      # required Pythonfunc --version already installed on local agent
+      # Azure Functions Core Tools are already installed on local agent func --version > 4.0.7512 
+
+      # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
+      - task: AzureCLI@2
+        inputs:
+          azureSubscription: 'ubds-sp-connection'
+          scriptType: 'ps'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            Write-Host "Logged in to Azure CLI"
+
+      # Install Python dependencies and deploy the Azure Function app
+      - powershell: |
+          pip install -r backend/requirements.txt
+          cd backend # makes sure that function is published from the backend folder 
+          func azure functionapp publish ubds-function-app --python
+        displayName: 'Deploy Azure Function'
+
+      # Test the deployed function endpoint to verify deployment
+      - powershell: |
+          Write-Host "Testing Function Deployment 🧪"
+          Start-Sleep -Seconds 30
+          $response = Invoke-RestMethod -Uri "https://ubds-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123"
+          Write-Host "Response: $response"
+        displayName: 'Test Azure Function'
+ 
+      # Optional: List backend directory contents (for debugging)
+      - powershell: |
+          Write-Host "Backend directory contents:"
+          Get-ChildItem -Path backend -Force
+        displayName: 'List Backend Directory'

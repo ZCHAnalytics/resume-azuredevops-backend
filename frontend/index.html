@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Zulfia's Cloud Resume with Azure</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      line-height: 1.6;
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+    }
+    h1, h2, h3 {
+      margin-top: 2rem;
+    }
+    ul {
+      padding-left: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    #main-header, #main-footer {
+      text-align: center;
+    }
+    a {
+      color: #0078D4;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <header id="main-header">
+    <h1>Zulfia</h1>
+    <p>Cloud, AI & DevOps Enthusiast</p>
+  </header>
+
+  <main id="resume-content">
+
+    <section id="skills" class="resume-section">
+      <h2>Skills & Certifications</h2>
+      <ul>
+        <li><strong>Certifications:</strong> AZ-900 • AI-900</li>
+        <li><strong>Cloud & IaC:</strong> Azure • Terraform • GitHub Actions</li>
+        <li><strong>Serverless:</strong> Azure Functions • Cosmos DB (Table API)</li>
+        <li><strong>Languages:</strong> Python • PowerShell • Bash • SQL</li>
+        <li><strong>Containers & Orchestration:</strong> Docker • Kubernetes</li>
+        <li><strong>Projects & Labs:</strong> Cloud Resume Challenge • Kubernetes Resume Challenge</li>
+      </ul>
+    </section>
+
+    <section id="projects" class="resume-section">
+
+      <h3>Cloud Projects</h3>
+      <ul>
+        <li>
+          <strong><a href="https://github.com/ZCHAnalytics/cloud-resume-challenge" target="_blank">
+            Cloud Resume Challenge (Azure, Terraform, CI/CD)
+          </a></strong>
+          <ul>
+            <li>Hosted static resume site on Azure with serverless visitor tracking via Azure Functions + Cosmos DB.</li>
+            <li>Infrastructure as Code (Terraform), CI/CD with GitHub Actions, SBOM & vulnerability scanning.</li>
+            <li>
+              <a href="https://github.com/ZCHAnalytics/shecodesclouds-frontend" target="_blank">Frontend Code</a> |
+              <a href="https://github.com/ZCHAnalytics/shecodesclouds-backend" target="_blank">Backend Code</a>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <strong><a href="https://github.com/ZCHAnalytics/azure-database-migration" target="_blank">
+            Azure Database Migration
+          </a></strong>
+          <ul>
+            <li>Restored production DB into a dev-safe environment; implemented disaster recovery with Entra ID auth.</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Data Projects</h3>
+      <ul>
+        <li>
+          <strong><a href="https://github.com/ZCHAnalytics/aws-python-data-centralisation" target="_blank">
+            Retail Sales ETL & Data Analysis
+          </a></strong>
+          <ul>
+            <li>OOP Python scripts to extract & transform 120k+ rows from AWS, APIs, JSON, PDF, and CSV.</li>
+            <li>Built star-schema model and wrote analytical SQL for actionable business insights.</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Platform Engineering & Kubernetes</h3>
+      <ul>
+        <li>
+          <strong><a href="https://github.com/ZCHAnalytics/kubernetes-resume-challenge" target="_blank">
+            Kubernetes Resume Challenge (Windows + PowerShell)
+          </a></strong>
+          <ul>
+            <li>Adapted a Linux-based K8s challenge to Windows using PowerShell, Helm, and Terraform.</li>
+            <li>Created autoscaling cluster, CI/CD pipeline, persistent DB storage, and secure secrets handling.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="education" class="resume-section">
+      <h2>Education</h2>
+      <ul>
+        <li>AiCore AI & Data Bootcamp, UK, 2024</li>
+        <li>MPhil, University of Cambridge, UK, 2010</li>
+      </ul>
+    </section>
+
+    <section id="visitor-count-section">
+      <h2>Visitor Counter</h2>
+      <p>
+        Number of visitors:
+        <span id="visitor-count">Loading...</span>
+      </p>
+    </section>
+
+  </main>
+
+  <footer id="main-footer">
+    <p>© 2025 Zulfia C.H. | Last updated July 2025</p>
+  </footer>
+
+  <script src="visitor-counter.js"></script>
+</body>
+</html>

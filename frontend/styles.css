@@ -1,0 +1,84 @@
+/* Base styling */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 20px;
+}
+
+/* Header */
+header#main-header {
+    background-color: #0078d4;
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header#main-header h1 {
+    margin: 0;
+    font-size: 2.4em;
+}
+
+header#main-header p {
+    margin-top: 10px;
+    font-size: 1.2em;
+}
+
+/* Section styling */
+.resume-section {
+    margin-bottom: 40px;
+    padding: 0 10px;
+}
+
+h2 {
+    color: #0078d4;
+    border-bottom: 2px solid #0078d4;
+    padding-bottom: 6px;
+    margin-top: 30px;
+    font-size: 1.5em;
+}
+
+/* Lists */
+.resume-section ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin-top: 15px;
+}
+
+.resume-section li {
+    margin-bottom: 10px;
+}
+
+/* Links */
+a {
+    color: #005a9e;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Visitor Counter */
+#visitor-count-section {
+    text-align: center;
+    margin-top: 50px;
+}
+
+#visitor-count {
+    font-weight: bold;
+    font-size: 1.4em;
+    color: #0078d4;
+}
+
+/* Footer */
+#main-footer {
+    text-align: center;
+    margin-top: 60px;
+    padding: 20px;
+    font-size: 0.9em;
+    color: #666;
+}

@@ -1,0 +1,171 @@
+# ========================
+# ✅ PIPELINE: Deploy Resume Backend Infrastructure with Terraform
+# ========================
+
+# 🎯 Trigger pipeline on changes to main branch and specific files
+name: backend-infrastructure
+
+trigger:
+  branches:
+    include:
+      - main
+
+  paths:
+    include:
+      - 'backend/iaac/**'
+      - 'azure-pipelines/backend-infrastructure.yml'
+
+
+# 🏗️ Agent Pool
+pool:
+  name: 'Default'
+
+# 🔧 Variables for directory paths and remote backend state configuration
+variables:
+  terraformWorkingDir: 'backend/iaac'
+  backendWorkingDir: 'backend'
+
+  tfstateResourceGroup: 'tfstate-rg-ubds'
+  tfstateStorageAccount: 'tfstateubds27567'
+  tfstateContainer: 'tfstate'
+  tfstateKey: 'ubds.tfstate'
+
+# ========================
+# 🔹 STAGE: Terraform Plan
+# ========================
+stages:
+  - stage: PlanBackendInfra
+    displayName: 'Plan Backend Infrastructure'
+    jobs:
+      - job: TerraformPlan
+        displayName: 'Terraform Plan'
+        pool:
+          name: 'Default'
+        steps: 
+          - checkout: self
+
+          # 📌 Confirming Azure CLI availability
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'ubds-sp-connection'
+              scriptType: 'ps'
+              scriptLocation: inlineScript
+              inlineScript: |
+                az --version 
+
+          # 🔧 Terraform Init using Remote Backend
+          - task: TerraformTaskV4@0
+            displayName: 'terraform Task to initialise'
+            inputs: 
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'ubds-sp-connection'
+              backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
+              backendAzureRmStorageAccountName: 'tfstateubds27567'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'ubds.tfstate'
+              environmentServiceNameAzureRM: 'ubds-sp-connection'
+              workingDirectory: '$(terraformWorkingDir)'
+
+          # 📄 Terraform Plan and save output
+          - task: TerraformTaskV4@0
+            displayName: 'Terraform Plan'
+            inputs: 
+              provider: 'azurerm'
+              command: 'plan'
+              backendServiceArm: 'ubds-sp-connection'
+              environmentServiceNameAzureRM: 'ubds-sp-connection'
+              workingDirectory: '$(terraformWorkingDir)'
+              commandOptions: -var-file="terraform.tfvars" -out=plan.tfplan
+
+          - powershell: |
+              echo Listing files in $(terraformWorkingDir)
+              dir $(terraformWorkingDir)
+            displayName: 'Debug: List files after Terraform Plan'
+
+
+          
+          # ⬆️ Publish plan file as pipeline artifact
+          - task: PublishPipelineArtifact@1
+            inputs: 
+              targetPath: '$(terraformWorkingDir)/plan.tfplan'
+              artifactName: 'terraform-plan'
+
+# ========================
+# 🔸 STAGE: Terraform Apply
+# ========================
+
+  - stage: ApplyBackendInfra
+    displayName: 'Apply Backend Infrastructure'
+    dependsOn: PlanBackendInfra
+    condition: succeeded()
+    jobs:
+      - job: TerraformApply
+        displayName: 'terraform Apply'
+        pool:
+          name: 'Default'
+        steps: 
+        - checkout: self
+
+        # ✅ Ensure authenticated session
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'ubds-sp-connection'
+            scriptType: 'ps'
+            scriptLocation: inlineScript
+            inlineScript: |
+              Write-Host "Azure login done" 
+
+        # ⬇️ Download previously saved plan    
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: 'terraform-plan'
+            targetPath: '$(terraformWorkingDir)'
+        
+        # 🔧 Re-init Terraform before apply (important for remote backend)
+        - task: TerraformTaskV4@0
+          displayName: 'Terraform Init'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'ubds-sp-connection'
+            backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
+            backendAzureRmStorageAccountName: 'tfstateubds27567'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'ubds.tfstate'
+            environmentServiceNameAzureRM: 'ubds-sp-connection'
+            workingDirectory: '$(terraformWorkingDir)'
+
+        # 🚀 Apply the planned Terraform changes
+        - task: TerraformTaskV4@0
+          displayName: 'Terraform Apply'
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            environmentServiceNameAzureRM: 'ubds-sp-connection'
+            workingDirectory: '$(terraformWorkingDir)'
+            commandOptions: '-auto-approve plan.tfplan'
+
+        # 🧾 Extract outputs and write a summary file
+        - powershell: |
+            Write-Host "### Backend Infrastructure Deployed!" | Out-File -FilePath "$(System.DefaultWorkingDirectory)\summary.md" -Encoding utf8 -Append
+
+            $cosmosKey = terraform output -raw cosmosdb_primary_key 2>$null
+            if (-not $cosmosKey) {
+                Write-Error "Error: cosmosdb_primary_key not found"
+                exit 1
+            }
+
+            $funcUrl = terraform output -raw function_app_url 2>$null
+
+            Add-Content -Path "$(System.DefaultWorkingDirectory)\summary.md" -Value "- **Function App Name**: zch-resume-function-app"
+            Add-Content -Path "$(System.DefaultWorkingDirectory)\summary.md" -Value "⏳ **Next Step**: Function code will be deployed automatically"
+          displayName: 'Output Summary'
+          workingDirectory: $(terraformWorkingDir)
+
+        
+        # 📤 Publish the summary
+        - task: PublishPipelineArtifact@1
+          inputs:
+            targetPath: '$(System.DefaultWorkingDirectory)/summary.md'
+            artifactName: 'infra-summary'
