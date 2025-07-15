@@ -43,8 +43,11 @@ jobs:
 
       # Install Azure Functions Core Tools (equivalent to GitHub workflow script)
       - powershell: |
-          choco install azure-functions-core-tools-4 -y
+          Invoke-WebRequest -Uri https://functionscdn.azureedge.net/public/4.0.5095/Azure.Functions.Core.Tools.win-x64.4.0.5095.zip -OutFile func.zip
+          Expand-Archive func.zip -DestinationPath $env:USERPROFILE\func
+          $env:PATH += ";$env:USERPROFILE\func"
         displayName: 'Install Azure Functions Core Tools'
+
 
       # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
       # use ps instead of bash as local agent is on windows
