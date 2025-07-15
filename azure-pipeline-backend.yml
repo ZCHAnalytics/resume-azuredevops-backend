@@ -47,10 +47,10 @@ stages:
               provider: 'azurerm'
               command: 'init'
               backendServiceArm: 'azure-sp-connection'
-              backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
-              backendAzureRmStorageAccountName: '$(tfstateStorageAccount)'
-              backendAzureRmContainerName: '$(tfstateContainer)'
-              backendAzureRmKey: '$(tfstateKey)'
+              backendAzureRmResourceGroupName: 'tfstate-rg'
+              backendAzureRmStorageAccountName: 'zchtfstatestorageacc'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'terraform.tfstate'
               workingDirectory: $(terraformWorkingDir)
 
           - task: TerraformTaskV2@0
