@@ -18,10 +18,10 @@ variables:
   terraformWorkingDir: 'iaac'
   backendWorkingDir: 'backend'
 
-  tfstateResourceGroup: 'tfstate-rg'
-  tfstateStorageAccount: 'zchtfstatestorageacc'
+  tfstateResourceGroup: 'tfstate-rg-ubds'
+  tfstateStorageAccount: 'tfstateubds27567'
   tfstateContainer: 'tfstate'
-  tfstateKey: 'terraform.tfstate'
+  tfstateKey: 'ubds.tfstate'
 
 stages:
   - stage: PlanBackendInfra
@@ -36,7 +36,7 @@ stages:
 
           - task: AzureCLI@2
             inputs:
-              azureSubscription: 'resume-sp-connection'
+              azureSubscription: 'ubds-connection'
               scriptType: 'ps'
               scriptLocation: inlineScript
               inlineScript: |
@@ -47,11 +47,11 @@ stages:
             inputs: 
               provider: 'azurerm'
               command: 'init'
-              backendServiceArm: 'resume-sp-connection'
-              backendAzureRmResourceGroupName: 'tfstate-rg'
-              backendAzureRmStorageAccountName: 'zchtfstatestorageacc'
+              backendServiceArm: 'ubds-connection'
+              backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
+              backendAzureRmStorageAccountName: 'tfstateubds27567'
               backendAzureRmContainerName: 'tfstate'
-              backendAzureRmKey: 'terraform.tfstate'
+              backendAzureRmKey: 'ubds.tfstate'
               environmentServiceNameAzureRM: 'resume-sp-connection'
               workingDirectory: '$(terraformWorkingDir)'
 
@@ -61,8 +61,8 @@ stages:
             inputs: 
               provider: 'azurerm'
               command: 'plan'
-              backendServiceArm: 'resume-sp-connection'
-              environmentServiceNameAzureRM: 'resume-sp-connection'
+              backendServiceArm: 'ubds-sp-connection'
+              environmentServiceNameAzureRM: 'ubds-sp-connection'
               workingDirectory: '$(terraformWorkingDir)'
               commandOptions: '-var-file="terraform.tfvars" -out=plan.tfplan'
           
@@ -85,7 +85,7 @@ stages:
 
         - task: AzureCLI@2
           inputs:
-            azureSubscription: 'resume-sp-connection'
+            azureSubscription: 'ubds-sp-connection'
             scriptType: 'ps'
             scriptLocation: inlineScript
             inlineScript: |
@@ -101,11 +101,12 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'init'
-            backendServiceArm: 'resume-sp-connection'
-            backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
-            backendAzureRmStorageAccountName: '$(tfstateStorageAccount)'
-            backendAzureRmContainerName: '$(tfstateContainer)'
-            backendAzureRmKey: '$(tfstateKey)'
+            backendServiceArm: 'ubds-connection'
+            backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
+            backendAzureRmStorageAccountName: 'tfstateubds27567'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'ubds.tfstate'
+            environmentServiceNameAzureRM: 'resume-sp-connection'
             workingDirectory: '$(terraformWorkingDir)'
 
 
@@ -114,7 +115,7 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'apply'
-            environmentServiceNameAzureRM: 'resume-sp-connection'
+            environmentServiceNameAzureRM: 'ubds-sp-connection'
             workingDirectory: '$(terraformWorkingDir)'
             commandOptions: '-auto-approve plan.tfplan'
 
