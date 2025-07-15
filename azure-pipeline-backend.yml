@@ -81,7 +81,7 @@ stages:
               echo Listing files in $(terraformWorkingDir)
               dir $(terraformWorkingDir)
             displayName: 'Debug: List files after Terraform Plan'
-            shell: powershell
+            pwsh: true
 
           
           # ⬆️ Publish plan file as pipeline artifact
