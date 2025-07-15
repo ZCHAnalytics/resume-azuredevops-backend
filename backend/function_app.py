@@ -33,7 +33,7 @@ def VisitorCounter(req: func.HttpRequest) -> func.HttpResponse:
     
     try:
         # Extract account name from endpoint
-        # From: https://zchresume-cosmos.documents.azure.com:443/
+        # From: https://zch-resume-cosmos.documents.azure.com:443/
         # Extract: zchresume-cosmos
         account_name = cosmos_endpoint.split('.')[0].replace('https://', '').replace('http://', '')
 

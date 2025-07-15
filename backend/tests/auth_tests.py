@@ -1,7 +1,7 @@
 import requests
 import pytest
 
-BASE_URL = "https://zch-resume-function-app.azurewebsites.net/api"
+BASE_URL = "https://ubds-resume-function-app.azurewebsites.net/api"
 
 def test_open_access():
     response = requests.get(f"{BASE_URL}/VisitorCounter?visitorId=test123")

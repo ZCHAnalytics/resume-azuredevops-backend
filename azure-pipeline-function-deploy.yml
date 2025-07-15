@@ -1,4 +1,9 @@
-# Trigger pipeline on push to main branch and when certain paths change
+# ------------------------------------------------------------------
+# Pipeline: Backend Function Deployment
+# Description: Deploys the backend Azure Function app on pushes to main branch
+# Triggers on changes in backend directory and pipeline YAML file
+# ------------------------------------------------------------------
+
 name: backend-function-deploy
 trigger:
   branches:
@@ -12,13 +17,16 @@ trigger:
 
 # Use Ubuntu VM image for running jobs
 pool:
-  vmImage: 'ubuntu-latest'
+  name: 'Default'
 
 jobs:
   - job: deploy_function
     displayName: Deploy Backend Function
+    pool: 
+      name: 'Default'
 
     steps:
+      # Checkout repository source code
       # GitHub Actions 'actions/checkout@v3' replaced by Azure DevOps 'checkout: self'
       - checkout: self
 
@@ -44,23 +52,23 @@ jobs:
       # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
       - task: AzureCLI@2
         inputs:
-          azureSubscription: 'azure-sp-connection' # replace with service principal connection name with new client id secret
+          azureSubscription: 'ubds-sp-connection'
           scriptType: 'bash'
           scriptLocation: 'inlineScript'
           inlineScript: |
             echo "Logged in to Azure CLI"
 
-      # Deploy the Azure Function
+      # Install Python dependencies and deploy the Azure Function app
       - script: |
           pip install -r backend/requirements.txt
-          func azure functionapp publish zch-resume-function-app --python
+          func azure functionapp publish ubds-resume-function-app --python
         displayName: 'Deploy Azure Function'
 
-      # Test the deployed function
+      # Test the deployed function endpoint to verify deployment
       - script: |
           echo "Testing Function Deployment 🧪"
           sleep 30
-          response=$(curl -s https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123)
+          response=$(curl -s https://ubds-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123)
           echo "Response: $response"
         displayName: 'Test Azure Function'
  
