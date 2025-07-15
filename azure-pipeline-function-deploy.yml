@@ -30,7 +30,49 @@ jobs:
       - checkout: self
       # required Pythonfunc --version already installed on local agent
       # Azure Functions Core Tools are already installed on local agent func --version > 4.0.7512 
-     
+          
+      # Mask secrets
+      - powershell: |
+          Write-Host "Masking secrets"
+          Write-Host "##vso[task.setvariable variable=GITHUB_TOKEN;issecret=true]$(GITHUB_TOKEN)"
+          Write-Host "##vso[task.setvariable variable=AZURE_SUBSCRIPTION_ID;issecret=true]$(AZURE_SUBSCRIPTION_ID)"
+        displayName: 'Mask Secrets'
+
+      # Install Syft
+      - powershell: |
+          Write-Host "Downloading and installing Syft..."
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/anchore/syft/main/install.sh" -OutFile "install_syft.sh"
+          bash ./install_syft.sh -b "$(Agent.ToolsDirectory)/syft"
+          $env:PATH += ";$(Agent.ToolsDirectory)/syft"
+          syft --version
+        displayName: 'Install Syft'
+
+      # Generate SBOM
+      - powershell: |
+          Write-Host "Generating SBOM..."
+          syft . -o json > sbom.json
+        displayName: 'Generate SBOM'
+
+      # Publish SBOM artifact
+      - publish: sbom.json
+        artifact: sbom
+        displayName: 'Publish SBOM Artifact'
+
+      # Install Grype
+      - powershell: |
+          Write-Host "Downloading and installing Grype..."
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/anchore/grype/main/install.sh" -OutFile "install_grype.sh"
+          bash ./install_grype.sh -b "$(Agent.ToolsDirectory)/grype"
+          $env:PATH += ";$(Agent.ToolsDirectory)/grype"
+          grype --version
+        displayName: 'Install Grype'
+
+      # Scan vulnerabilities
+      - powershell: |
+          Write-Host "Scanning SBOM for vulnerabilities..."
+          grype sbom:sbom.json --fail-on critical -o table
+        displayName: 'Scan for Vulnerabilities with Grype'
+
       # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
       # use ps instead of bash as local agent is on windows
       - task: AzureCLI@2
