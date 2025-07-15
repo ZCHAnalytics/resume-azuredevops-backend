@@ -47,7 +47,7 @@ stages:
             inputs: 
               provider: 'azurerm'
               command: 'init'
-              allowBackendServiceOverride: false # As V4 expects backend values
+              allowBackendServiceOverride: false
               workingDirectory: '$(terraformWorkingDir)'
 
           - task: TerraformTaskV4@0
