@@ -57,7 +57,7 @@ jobs:
             Write-Host "Logged in to Azure CLI"
 
       # Install Python dependencies and deploy the Azure Function app
-      - powershell:: |
+      - powershell: |
           pip install -r backend/requirements.txt
           func azure functionapp publish ubds-resume-function-app --python
         displayName: 'Deploy Azure Function'
