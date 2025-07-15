@@ -75,12 +75,19 @@ stages:
               backendServiceArm: 'ubds-sp-connection'
               environmentServiceNameAzureRM: 'ubds-sp-connection'
               workingDirectory: '$(terraformWorkingDir)'
-              commandOptions: '-var-file="terraform.tfvars" -out=plan.tfplan'
+              commandOptions: -var-file="terraform.tfvars" -out=plan.tfplan
+
+          - script: |
+              echo Listing files in $(terraformWorkingDir)
+              dir $(terraformWorkingDir)
+            displayName: 'Debug: List files after Terraform Plan'
+            shell: powershell
+
           
           # ⬆️ Publish plan file as pipeline artifact
           - task: PublishPipelineArtifact@1
             inputs: 
-              targetpath: '$(terraformWorkingDir)/plan.tfplan'
+              targetPath: '$(terraformWorkingDir)/plan.tfplan'
               artifactName: 'terraform-plan'
 
 # ========================
