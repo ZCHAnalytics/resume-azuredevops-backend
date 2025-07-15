@@ -44,6 +44,7 @@ jobs:
       # Install Python dependencies and deploy the Azure Function app
       - powershell: |
           pip install -r backend/requirements.txt
+          cd backend
           func azure functionapp publish ubds-function-app --python
         displayName: 'Deploy Azure Function'
 
