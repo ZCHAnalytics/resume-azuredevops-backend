@@ -43,10 +43,15 @@ stages:
                 az --version 
 
           - task: TerraformTaskV1@0
+            displayName: 'terraform Task to initialise'
             inputs: 
               provider: 'azurerm'
               command: 'init'
               backendServiceArm: 'azure-sp-connection'
+              backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
+              backendAzurermStorageAccountName: '$(tfstateStorageAccount)'
+              backendAzurermConstainerName: '$(tfstateContainer)'
+              backendAzureRKey: '$(tfstateKey)'
               workingDirectory: $(terraformWorkingDir)
 
           - task: TerraformTaskV2@0
