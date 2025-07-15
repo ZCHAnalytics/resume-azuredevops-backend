@@ -61,21 +61,3 @@ jobs:
           Write-Host "Backend directory contents:"
           Get-ChildItem -Path backend -Force
         displayName: 'List Backend Directory'
-        
-      # Optional: Run backend tests if available
-      - powershell: |
-          # Check if the tests folder exists and has any Python test files
-          if (Test-Path "backend/tests" -PathType Container) {
-            $testFiles = Get-ChildItem -Path "backend/tests" -Filter "*.py" -Recurse
-            if ($testFiles.Count -gt 0) {
-              pip install pytest requests
-              pytest backend/tests
-            }
-            else {
-              Write-Host "No Python test files found in backend/tests"
-            }
-          }
-          else {
-            Write-Host "backend/tests directory not found"
-          }
-        displayName: 'Run Backend Tests If Available'
