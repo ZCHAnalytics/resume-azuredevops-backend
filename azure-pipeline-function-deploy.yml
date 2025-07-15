@@ -44,14 +44,14 @@ jobs:
       # Install Python dependencies and deploy the Azure Function app
       - powershell: |
           pip install -r backend/requirements.txt
-          func azure functionapp publish ubds-resume-function-app --python
+          func azure functionapp publish ubds-function-app --python
         displayName: 'Deploy Azure Function'
 
       # Test the deployed function endpoint to verify deployment
       - powershell: |
           Write-Host "Testing Function Deployment 🧪"
           Start-Sleep -Seconds 30
-          $response = Invoke-RestMethod -Uri "https://ubds-resume-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123"
+          $response = Invoke-RestMethod -Uri "https://ubds-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123"
           Write-Host "Response: $response"
         displayName: 'Test Azure Function'
  
