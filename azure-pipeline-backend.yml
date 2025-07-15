@@ -13,7 +13,8 @@ trigger:
   paths:
     include:
       - 'iaac/*'
-      - 'azure-pipeline-backend.yml'
+      - 'azure-pipeline-infrastructure.yml'
+
 
 # 🏗️ Agent Pool
 pool:
