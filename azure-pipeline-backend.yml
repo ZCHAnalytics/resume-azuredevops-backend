@@ -1,4 +1,8 @@
+# ========================
+# ✅ PIPELINE: Deploy Resume Backend Infrastructure with Terraform
+# ========================
 
+# 🎯 Trigger pipeline on changes to main branch and specific files
 name: backend-infrastructure
 
 trigger:
@@ -11,9 +15,11 @@ trigger:
       - 'iaac/*'
       - 'azure-pipeline-backend.yml'
 
+# 🏗️ Agent Pool
 pool:
   name: 'Default'
 
+# 🔧 Variables for directory paths and remote backend state configuration
 variables:
   terraformWorkingDir: 'iaac'
   backendWorkingDir: 'backend'
@@ -23,6 +29,9 @@ variables:
   tfstateContainer: 'tfstate'
   tfstateKey: 'ubds.tfstate'
 
+# ========================
+# 🔹 STAGE: Terraform Plan
+# ========================
 stages:
   - stage: PlanBackendInfra
     displayName: 'Plan Backend Infrastructure'
@@ -34,6 +43,7 @@ stages:
         steps: 
           - checkout: self
 
+          # 📌 Confirming Azure CLI availability
           - task: AzureCLI@2
             inputs:
               azureSubscription: 'ubds-sp-connection'
@@ -42,6 +52,7 @@ stages:
               inlineScript: |
                 az --version 
 
+          # 🔧 Terraform Init using Remote Backend
           - task: TerraformTaskV4@0
             displayName: 'terraform Task to initialise'
             inputs: 
@@ -55,7 +66,7 @@ stages:
               environmentServiceNameAzureRM: 'ubds-sp-connection'
               workingDirectory: '$(terraformWorkingDir)'
 
-
+          # 📄 Terraform Plan and save output
           - task: TerraformTaskV4@0
             displayName: 'Terraform Plan'
             inputs: 
@@ -66,10 +77,15 @@ stages:
               workingDirectory: '$(terraformWorkingDir)'
               commandOptions: '-var-file="terraform.tfvars" -out=plan.tfplan'
           
+          # ⬆️ Publish plan file as pipeline artifact
           - task: PublishPipelineArtifact@1
             inputs: 
               targetpath: '$(terraformWorkingDir)/plan.tfplan'
               artifactName: 'terraform-plan'
+
+# ========================
+# 🔸 STAGE: Terraform Apply
+# ========================
 
   - stage: ApplyBackendInfra
     displayName: 'Apply Backend Infrastructure'
@@ -83,6 +99,7 @@ stages:
         steps: 
         - checkout: self
 
+        # ✅ Ensure authenticated session
         - task: AzureCLI@2
           inputs:
             azureSubscription: 'ubds-sp-connection'
@@ -90,12 +107,14 @@ stages:
             scriptLocation: inlineScript
             inlineScript: |
               Write-Host "Azure login done" 
-              
+
+        # ⬇️ Download previously saved plan    
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: 'terraform-plan'
             targetPath: '$(terraformWorkingDir)'
-            
+        
+        # 🔧 Re-init Terraform before apply (important for remote backend)
         - task: TerraformTaskV4@0
           displayName: 'Terraform Init'
           inputs:
@@ -109,7 +128,7 @@ stages:
             environmentServiceNameAzureRM: 'ubds-sp-connection'
             workingDirectory: '$(terraformWorkingDir)'
 
-
+        # 🚀 Apply the planned Terraform changes
         - task: TerraformTaskV4@0
           displayName: 'Terraform Apply'
           inputs:
@@ -119,24 +138,25 @@ stages:
             workingDirectory: '$(terraformWorkingDir)'
             commandOptions: '-auto-approve plan.tfplan'
 
-        - script: | 
-            echo "### Backend Infrastructure Deployed!" >> $(System.DefaultWorkingDirectory)
+        # 🧾 Extract outputs and write a summary file
+        - powershell: |
+            Write-Host "### Backend Infrastructure Deployed!" | Out-File -FilePath "$(System.DefaultWorkingDirectory)\summary.md" -Encoding utf8 -Append
 
-            Cosmos_KEY=$(terraform output -raw cosmosdb_primary_key || echo "")
+            $cosmosKey = terraform output -raw cosmosdb_primary_key 2>$null
+            if (-not $cosmosKey) {
+                Write-Error "Error: cosmosdb_primary_key not found"
+                exit 1
+            }
 
-            if [ -z "$Cosmos_KEY" ]; then
-              echo "Error: cosmosdb_primary_key not found"
-              exit 1
-            fi
+            $funcUrl = terraform output -raw function_app_url 2>$null
 
-            FUNC_URL=$(terraform output -raw function_app_url | grep -E '^https://[^ ]+$' || echo "")
-
-            echo "- **Function App Name**: zch-resume-function-app" >> $(System.DefaultWorkingDirectory)/summary.md
-            echo "⏳ **Next Step**: Function code will be deployed automatically" >> $(System.DefaultWorkingDirectory)/summary.md
-          
-          workingDirectory: $(terraformWorkingDir)
+            Add-Content -Path "$(System.DefaultWorkingDirectory)\summary.md" -Value "- **Function App Name**: zch-resume-function-app"
+            Add-Content -Path "$(System.DefaultWorkingDirectory)\summary.md" -Value "⏳ **Next Step**: Function code will be deployed automatically"
           displayName: 'Output Summary'
+          workingDirectory: $(terraformWorkingDir)
 
+        
+        # 📤 Publish the summary
         - task: PublishPipelineArtifact@1
           inputs:
             targetPath: '$(System.DefaultWorkingDirectory)/summary.md'
