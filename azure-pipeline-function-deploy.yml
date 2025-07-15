@@ -13,7 +13,7 @@ trigger:
   paths:
     include:
       - backend/**
-      - azure-pipelines-function-deploy.yml
+      - azure-pipeline-function-deploy.yml
 
 # Use local agent 
 pool:
