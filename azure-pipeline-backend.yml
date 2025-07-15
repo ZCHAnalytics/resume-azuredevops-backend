@@ -36,6 +36,7 @@ stages:
 
           - task: AzureCLI@2
             inputs:
+              backendServiceArm: 'resume-sp-connection'
               azureSubscription: 'resume-sp-connection'
               scriptType: 'ps'
               scriptLocation: inlineScript
@@ -47,6 +48,8 @@ stages:
             inputs: 
               provider: 'azurerm'
               command: 'init'
+              backendServiceArm: 'resume-sp-connection'
+
               azureSubscription: 'resume-sp-connection'
               allowBackendServiceOverride: false
               workingDirectory: '$(terraformWorkingDir)'
@@ -57,6 +60,8 @@ stages:
             inputs: 
               provider: 'azurerm'
               command: 'plan'
+              backendServiceArm: 'resume-sp-connection'
+
               azureSubscription: 'resume-sp-connection'
               
               workingDirectory: '$(terraformWorkingDir)'
