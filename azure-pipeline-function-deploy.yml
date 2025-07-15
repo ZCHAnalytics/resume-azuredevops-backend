@@ -27,28 +27,10 @@ jobs:
 
     steps:
       # Checkout repository source code
-      # GitHub Actions 'actions/checkout@v3' replaced by Azure DevOps 'checkout: self'
       - checkout: self
-      
-      # GitHub Actions 'actions/setup-python@v4' replaced by Azure DevOps task
-      #- task: UsePythonVersion@0
-      #  inputs:
-      #    versionSpec: '3.10'
-      #    addToPath: true
-      
-          
-      # Masking secrets: Azure DevOps does not support echo "::add-mask::" syntax.
-      # Instead, secrets are automatically masked in logs when referenced as variables.
-      # So secrets should be defined in Azure DevOps Library or Pipeline variables.
-
-      # Install Azure Functions Core Tools (equivalent to GitHub workflow script)
-      - powershell: |
-          Invoke-WebRequest -Uri https://functionscdn.azureedge.net/public/4.0.5095/Azure.Functions.Core.Tools.win-x64.4.0.5095.zip -OutFile func.zip
-          Expand-Archive func.zip -DestinationPath $env:USERPROFILE\func
-          $env:PATH += ";$env:USERPROFILE\func"
-        displayName: 'Install Azure Functions Core Tools'
-
-
+      # required Pythonfunc --version already installed on local agent
+      # Azure Functions Core Tools are already installed on local agent func --version > 4.0.7512 
+     
       # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
       # use ps instead of bash as local agent is on windows
       - task: AzureCLI@2
