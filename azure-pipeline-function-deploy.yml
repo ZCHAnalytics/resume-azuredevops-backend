@@ -30,12 +30,6 @@ jobs:
       - checkout: self
       # required Pythonfunc --version already installed on local agent
       # Azure Functions Core Tools are already installed on local agent func --version > 4.0.7512 
-          
-      # Mask secrets
-      - powershell: |
-          Write-Host "Masking secrets"
-          Write-Host "##vso[task.setvariable variable=AZURE_SUBSCRIPTION_ID;issecret=true]$(AZURE_SUBSCRIPTION_ID)"
-        displayName: 'Mask Secrets'
 
       # Install Syft
       - powershell: |
