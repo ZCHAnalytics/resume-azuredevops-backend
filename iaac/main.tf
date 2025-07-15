@@ -8,7 +8,9 @@ terraform {
   }
   required_version = ">= 1.0" # Ensure Terraform CLI is v1.0 or newer
 }
-
+/*
+This is an old backend configuration that worked with Github Actions and Azure_cred secrets. 
+It is not used in the Azuredevops, where credentials are passed using service principal connection
 # ----- Backend Configuration -----
 # This block stores Terraform state remotely in an Azure Storage Account
 
@@ -23,6 +25,7 @@ terraform {
 # Note: The backend block is essential during 'terraform init' (both plan and apply).
 # It configures remote state storage used in GitHub Actions workflows:
 #    - 'Terraform Init' step in plan and apply jobs uses this to connect state storage.
+*/
 
 # ----- Provider Setup -----
 provider "azurerm" {
