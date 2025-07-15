@@ -34,9 +34,20 @@ jobs:
       # Install Syft
       - powershell: |
           Write-Host "Downloading and installing Syft..."
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/anchore/syft/main/install.sh" -OutFile "install_syft.sh"
-          bash ./install_syft.sh -b "$(Agent.ToolsDirectory)/syft"
-          $env:PATH += ";$(Agent.ToolsDirectory)/syft"
+
+          $syftVersion = "v0.89.0"  # Specify Syft version you want
+          $syftUrl = "https://github.com/anchore/syft/releases/download/$syftVersion/syft_windows_amd64.zip"
+          $syftZip = "$(Agent.ToolsDirectory)\syft.zip"
+          $syftInstallDir = "$(Agent.ToolsDirectory)\syft"
+
+          Invoke-WebRequest -Uri $syftUrl -OutFile $syftZip
+          Expand-Archive -Path $syftZip -DestinationPath $syftInstallDir -Force
+          Remove-Item $syftZip
+
+          # Add syft to PATH for the current session
+          $env:PATH = "$syftInstallDir;$env:PATH"
+
+          # Verify installation
           syft --version
         displayName: 'Install Syft'
 
@@ -54,9 +65,20 @@ jobs:
       # Install Grype
       - powershell: |
           Write-Host "Downloading and installing Grype..."
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/anchore/grype/main/install.sh" -OutFile "install_grype.sh"
-          bash ./install_grype.sh -b "$(Agent.ToolsDirectory)/grype"
-          $env:PATH += ";$(Agent.ToolsDirectory)/grype"
+
+          $grypeVersion = "v0.68.1"  # Specify Grype version you want
+          $grypeUrl = "https://github.com/anchore/grype/releases/download/$grypeVersion/grype_windows_amd64.zip"
+          $grypeZip = "$(Agent.ToolsDirectory)\grype.zip"
+          $grypeInstallDir = "$(Agent.ToolsDirectory)\grype"
+
+          Invoke-WebRequest -Uri $grypeUrl -OutFile $grypeZip
+          Expand-Archive -Path $grypeZip -DestinationPath $grypeInstallDir -Force
+          Remove-Item $grypeZip
+
+          # Add grype to PATH for the current session
+          $env:PATH = "$grypeInstallDir;$env:PATH"
+
+          # Verify installation
           grype --version
         displayName: 'Install Grype'
 
