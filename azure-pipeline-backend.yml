@@ -49,7 +49,10 @@ stages:
               provider: 'azurerm'
               command: 'init'
               backendServiceArm: 'resume-sp-connection'
-
+              backendAzureRmResourceGroupName: 'tfstate-rg'
+              backendAzureRmStorageAccountName: 'zchtfstatestorageacc'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'terraform.tfstate'
               azureSubscription: 'resume-sp-connection'
               allowBackendServiceOverride: false
               workingDirectory: '$(terraformWorkingDir)'
