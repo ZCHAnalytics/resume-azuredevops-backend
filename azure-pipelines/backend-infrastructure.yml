@@ -59,28 +59,40 @@ stages:
               workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 
-#           # 📌 Confirming Azure CLI availability
-#           - task: AzureCLI@2
-#             inputs:
-#               azureSubscription: 'ubds-sp-connection'
-#               scriptType: 'ps'
-#               scriptLocation: inlineScript
-#               inlineScript: |
-#                 az --version 
+          # 📌 Confirming Azure CLI availability
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'ubds-sp-connection'
+              scriptType: 'ps'
+              scriptLocation: inlineScript
+              inlineScript: |
+                az --version 
 
-#           # 🔧 Terraform Init using Remote Backend
-#           - task: TerraformTaskV4@0
-#             displayName: 'terraform Task to initialise'
-#             inputs: 
-#               provider: 'azurerm'
-#               command: 'init'
-#               backendServiceArm: 'ubds-sp-connection'
-#               backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
-#               backendAzureRmStorageAccountName: 'tfstateubds27567'
-#               backendAzureRmContainerName: 'tfstate'
-#               backendAzureRmKey: 'ubds.tfstate'
-#               environmentServiceNameAzureRM: 'ubds-sp-connection'
-#               workingDirectory: '$(terraformWorkingDir)'
+          # 🔧 Terraform Init using Remote Backend
+          - task: TerraformTaskV4@0
+            displayName: 'terraform Task to initialise'
+            inputs: 
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'ubds-sp-connection'
+              backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
+              backendAzureRmStorageAccountName: 'tfstateubds27567'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'ubds.tfstate'
+              environmentServiceNameAzureRM: 'ubds-sp-connection'
+              workingDirectory: '$(terraformWorkingDir)'
+          
+          
+          - powershell: |
+              Write-Host "Checking tfstate existence..."
+              az storage blob show `
+                --account-name $(tfstateStorageAccount) `
+                --container-name $(tfstateContainer) `
+                --name $(tfstateKey) `
+                --auth-mode login
+            displayName: '🔍 Check if remote state exists'
+
+
 
 #           # 📄 Terraform Plan and save output
 #           - task: TerraformTaskV4@0
