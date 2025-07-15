@@ -50,7 +50,7 @@ stages:
               backendServiceArm: 'azure-sp-connection'
               backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
               backendAzurermStorageAccountName: '$(tfstateStorageAccount)'
-              backendAzurermConstainerName: '$(tfstateContainer)'
+              backendAzurermContainerName: '$(tfstateContainer)'
               backendAzureRKey: '$(tfstateKey)'
               workingDirectory: $(terraformWorkingDir)
 
