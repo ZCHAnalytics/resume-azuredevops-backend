@@ -42,7 +42,7 @@ stages:
               inlineScript: |
                 az --version 
 
-          - task: TerraformTaskV1@0
+          - task: TerraformTaskV4@0
             displayName: 'terraform Task to initialise'
             inputs: 
               provider: 'azurerm'
@@ -54,7 +54,7 @@ stages:
               backendAzureRmKey: '$(tfstateKey)'
               workingDirectory: $(terraformWorkingDir)
 
-          - task: TerraformTaskV2@0
+          - task: TerraformTaskV4@0
             displayName: 'Terraform Plan'
             inputs: 
               provider: 'azurerm'
