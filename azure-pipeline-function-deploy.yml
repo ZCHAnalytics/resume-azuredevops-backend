@@ -44,7 +44,7 @@ jobs:
       # Install Python dependencies and deploy the Azure Function app
       - powershell: |
           pip install -r backend/requirements.txt
-          cd backend
+          cd backend # makes sure that function is published from the backend folder 
           func azure functionapp publish ubds-function-app --python
         displayName: 'Deploy Azure Function'
 
@@ -64,11 +64,18 @@ jobs:
         
       # Optional: Run backend tests if available
       - powershell: |
-          if (Test-Path "backend/tests/auth_tests.py") {
-            pip install pytest requests
-            pytest backend/tests/auth_tests.py
+          # Check if the tests folder exists and has any Python test files
+          if (Test-Path "backend/tests" -PathType Container) {
+            $testFiles = Get-ChildItem -Path "backend/tests" -Filter "*.py" -Recurse
+            if ($testFiles.Count -gt 0) {
+              pip install pytest requests
+              pytest backend/tests
+            }
+            else {
+              Write-Host "No Python test files found in backend/tests"
+            }
           }
           else {
-            Write-Host "auth_tests.py not found"
+            Write-Host "backend/tests directory not found"
           }
-        displayName: 'Run Backend Auth Tests'
+        displayName: 'Run Backend Tests If Available'
