@@ -50,6 +50,7 @@ stages:
               allowBackendServiceOverride: false
               workingDirectory: '$(terraformWorkingDir)'
 
+
           - task: TerraformTaskV4@0
             displayName: 'Terraform Plan'
             inputs: 
