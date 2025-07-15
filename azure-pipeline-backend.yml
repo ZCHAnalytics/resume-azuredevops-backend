@@ -51,7 +51,7 @@ stages:
               backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
               backendAzurermStorageAccountName: '$(tfstateStorageAccount)'
               backendAzurermContainerName: '$(tfstateContainer)'
-              backendAzureRKey: '$(tfstateKey)'
+              backendAzureRmRKey: '$(tfstateKey)'
               workingDirectory: $(terraformWorkingDir)
 
           - task: TerraformTaskV2@0
