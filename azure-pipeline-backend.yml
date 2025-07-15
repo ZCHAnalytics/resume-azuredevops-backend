@@ -36,7 +36,7 @@ stages:
 
           - task: AzureCLI@2
             inputs:
-              azureSubscription: 'ubds-connection'
+              azureSubscription: 'ubds-sp-connection'
               scriptType: 'ps'
               scriptLocation: inlineScript
               inlineScript: |
@@ -47,12 +47,12 @@ stages:
             inputs: 
               provider: 'azurerm'
               command: 'init'
-              backendServiceArm: 'ubds-connection'
+              backendServiceArm: 'ubds-sp-connection'
               backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
               backendAzureRmStorageAccountName: 'tfstateubds27567'
               backendAzureRmContainerName: 'tfstate'
               backendAzureRmKey: 'ubds.tfstate'
-              environmentServiceNameAzureRM: 'resume-sp-connection'
+              environmentServiceNameAzureRM: 'ubds-sp-connection'
               workingDirectory: '$(terraformWorkingDir)'
 
 
@@ -101,12 +101,12 @@ stages:
           inputs:
             provider: 'azurerm'
             command: 'init'
-            backendServiceArm: 'ubds-connection'
+            backendServiceArm: 'ubds-sp-connection'
             backendAzureRmResourceGroupName: 'tfstate-rg-ubds'
             backendAzureRmStorageAccountName: 'tfstateubds27567'
             backendAzureRmContainerName: 'tfstate'
             backendAzureRmKey: 'ubds.tfstate'
-            environmentServiceNameAzureRM: 'resume-sp-connection'
+            environmentServiceNameAzureRM: 'ubds-sp-connection'
             workingDirectory: '$(terraformWorkingDir)'
 
 
