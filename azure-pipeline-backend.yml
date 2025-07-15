@@ -36,7 +36,6 @@ stages:
 
           - task: AzureCLI@2
             inputs:
-              backendServiceArm: 'resume-sp-connection'
               azureSubscription: 'resume-sp-connection'
               scriptType: 'ps'
               scriptLocation: inlineScript
@@ -53,8 +52,7 @@ stages:
               backendAzureRmStorageAccountName: 'zchtfstatestorageacc'
               backendAzureRmContainerName: 'tfstate'
               backendAzureRmKey: 'terraform.tfstate'
-              azureSubscription: 'resume-sp-connection'
-              allowBackendServiceOverride: false
+              environmentServiceNameAzureRM: 'resume-sp-connection'
               workingDirectory: '$(terraformWorkingDir)'
 
 
@@ -64,9 +62,7 @@ stages:
               provider: 'azurerm'
               command: 'plan'
               backendServiceArm: 'resume-sp-connection'
-
-              azureSubscription: 'resume-sp-connection'
-              
+              environmentServiceNameAzureRM: 'resume-sp-connection'
               workingDirectory: '$(terraformWorkingDir)'
               commandOptions: '-var-file="terraform.tfvars" -out=plan.tfplan'
           
@@ -100,13 +96,27 @@ stages:
             artifactName: 'terraform-plan'
             targetPath: '$(terraformWorkingDir)'
             
-        - script: terraform init
+        - task: TerraformTaskV4@0
           displayName: 'Terraform Init'
-          workingDirectory: '$(terraformWorkingDir)'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'resume-sp-connection'
+            backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
+            backendAzureRmStorageAccountName: '$(tfstateStorageAccount)'
+            backendAzureRmContainerName: '$(tfstateContainer)'
+            backendAzureRmKey: '$(tfstateKey)'
+            workingDirectory: '$(terraformWorkingDir)'
 
-        - script: terraform apply -no-color -auto-approve plan.tfplan
+
+        - task: TerraformTaskV4@0
           displayName: 'Terraform Apply'
-          workingDirectory: '$(terraformWorkingDir)'
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            environmentServiceNameAzureRM: 'resume-sp-connection'
+            workingDirectory: '$(terraformWorkingDir)'
+            commandOptions: '-auto-approve plan.tfplan'
 
         - script: | 
             echo "### Backend Infrastructure Deployed!" >> $(System.DefaultWorkingDirectory)
