@@ -45,11 +45,18 @@ stages:
           - checkout: self
 
           # 🔍 Debug: Show repo file structure
-          - powershell: |
-              Write-Host "##[group]Files in repository:"
-              Get-ChildItem -Recurse | ForEach-Object { Write-Host $_.FullName }
-              Write-Host "##[endgroup]"
+
+          - task: PowerShell@2
             displayName: '🔍 Debug: List all files in repo'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "🔍 Current working directory:"
+                Get-Location
+
+                Write-Host "📂 All files:"
+                Get-ChildItem -Recurse -Force
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 
 #           # 📌 Confirming Azure CLI availability
