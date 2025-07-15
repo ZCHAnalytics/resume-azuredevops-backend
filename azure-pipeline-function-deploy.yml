@@ -15,7 +15,7 @@ trigger:
       - backend/**
       - azure-pipelines-function-deploy.yml
 
-# Use Ubuntu VM image for running jobs
+# Use local agent 
 pool:
   name: 'Default'
 
