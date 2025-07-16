@@ -61,7 +61,7 @@ jobs:
         displayName: Generate SBOM
         inputs:
           targetType: inline
-          workingDirectory: 'frontend'
+          workingDirectory: '$(Build.SourcesDirectory)'
           script: |
             syft frontend -o json | Out-File -Encoding utf8 sbom.json
             if (Test-Path sbom.json) {
