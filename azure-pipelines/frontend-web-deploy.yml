@@ -63,16 +63,20 @@ jobs:
           targetType: inline
           workingDirectory: '$(Build.SourcesDirectory)'
           script: |
-            syft frontend -o json | Out-File -Encoding utf8 sbom.json
-            Write-Output "Checking if sbom.json exists in frontend folder:"
-            if (Test-Path frontend\sbom.json) {
-              Write-Output "Found sbom.json in frontend folder."
+            $sbomPath = Join-Path -Path "$(Build.SourcesDirectory)\frontend" -ChildPath "sbom.json"
+
+            syft frontend -o json | Out-File -Encoding utf8 $sbomPath
+
+            Write-Output "Checking if sbom.json exists at path: $sbomPath"
+            if (Test-Path $sbomPath) {
+              Write-Output "sbom.json found successfully."
             } else {
-              Write-Output "sbom.json NOT found in frontend folder."
+              Write-Error "sbom.json NOT found at expected path."
             }
-            
+
             Write-Output "Listing files in frontend folder:"
-            Get-ChildItem frontend
+            Get-ChildItem "$(Build.SourcesDirectory)\frontend"
+
 
       - task: PowerShell@2
         displayName: Search for sbom.json in frontend recursively
