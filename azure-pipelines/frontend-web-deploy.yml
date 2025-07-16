@@ -15,10 +15,15 @@ trigger:
       - 'frontend/iaac/**'                             # Trigger only when web files change
       - 'azure-pipelines/frontend-web-deploy.yml'   
 
-
 # use local agent on windows
 pool:
   name: 'Default'
+
+variables:
+  STORAGE_ACCOUNT_NAME: ubdswebstorage
+  CDN_ENDPOINT_NAME: ubds-resume
+  RESOURCE_GROUP_NAME: ubds-rg
+
 
 jobs:
   - job: deploy_web_files
@@ -26,13 +31,6 @@ jobs:
     pool:
       name: 'Default'
     
-    env:
-      STORAGE_ACCOUNT_NAME: ubdswebstorage
-      CDN_ENDPOINT_NAME: ubds-resume
-      # CDN_PROFILE_NAME: ubds-cdn-profile
-      RESOURCE_GROUP_NAME: ubds-rg
-      # frontend_origin_urls: https://ubds-resume.azureedge.net
-
     steps:
       - checkout: self 
 
@@ -71,7 +69,7 @@ jobs:
             
       - task: PowerShell@2 
         name: GetStorage
-        displayName:: Get Sotrage Account Name
+        displayName: Get Storage Account Name
         inputs:
           targetType: inline
           script: |
