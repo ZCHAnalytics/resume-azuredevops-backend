@@ -49,9 +49,9 @@ jobs:
 
       # Test the deployed function endpoint to verify deployment
       - powershell: |
-          Write-Host "Testing Function Deployment 🧪"
+          Write-Host "Testing Function Deployment"
           Start-Sleep -Seconds 30
-          $response = Invoke-RestMethod -Uri "https://ubds-function-app.azurewebsites.net/api/VisitorCounter?visitorId=test123"
+          $response = Invoke-RestMethod -Uri "https://ubds-func-app.azurewebsites.net/api/VisitorCounter?visitorId=test123"
           Write-Host "Response: $response"
         displayName: 'Test Azure Function'
  
