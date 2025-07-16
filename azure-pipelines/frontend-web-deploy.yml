@@ -91,7 +91,7 @@ jobs:
 
             cd frontend/iaac
             
-            terraform init `
+            terraform init -reconfigure`
               -backend-config="resource_group_name=$(tfstateResourceGroup)" `
               -backend-config="storage_account_name=$(tfstateStorageAccount)" `
               -backend-config="container_name=$(tfstateContainer)" `
