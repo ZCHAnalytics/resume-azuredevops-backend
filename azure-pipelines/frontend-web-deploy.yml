@@ -79,11 +79,10 @@ jobs:
             Write-Output "Searching for sbom.json in frontend recursively:"
             Get-ChildItem -Path . -Filter sbom.json -Recurse
 
-
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
         inputs:
-          PathtoPublish: 'frontend\sbom.json'
+          PathtoPublish: '$(Build.SourcesDirectory)\frontend\sbom.json'
           ArtifactName: 'sbom-frontend'
 
       - task: PowerShell@2
