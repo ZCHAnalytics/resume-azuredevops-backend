@@ -63,7 +63,7 @@ jobs:
           targetType: inline
           workingDirectory: '$(Build.SourcesDirectory)'
           script: |
-            syft frontend -o json | Out-File -Encoding utf8 sbom.json
+            syft .\frontend -o json | Out-File -Encoding utf8 sbom.json
             if (Test-Path sbom.json) {
               Write-Output "sbom.json created successfully."
             } else {
