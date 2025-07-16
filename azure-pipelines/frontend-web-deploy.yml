@@ -89,13 +89,6 @@ jobs:
           PathtoPublish: '$(Build.SourcesDirectory)\frontend\sbom.json'
           ArtifactName: 'sbom-frontend'
 
-      - task: PublishBuildArtifacts@1
-        displayName: Upload Grype Results
-        condition: succeededOrFailed()
-        inputs:
-          PathtoPublish: '$(Build.SourcesDirectory)\frontend\grype-results.json'
-          ArtifactName: 'grype-results'
-
       - task: PowerShell@2
         displayName: List files in frontend folder after scanning
         inputs:
