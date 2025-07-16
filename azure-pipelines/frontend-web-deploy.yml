@@ -99,6 +99,17 @@ jobs:
               -input=false `
               -no-color
 
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Terraform init failed"
+              exit 1
+            }
+
+            $storage = terraform output -raw storage_account_name 2>&1
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Terraform output command failed: $storage"
+              exit 1
+            }
+
             Write-Host "tfstateContainer = $(tfstateContainer)"
             Write-Host "Running terraform init with backend-config container_name=$(tfstateContainer)"
 
