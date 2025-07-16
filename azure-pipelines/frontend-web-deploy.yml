@@ -76,14 +76,14 @@ jobs:
         
             $defaultStorage = "$(STORAGE_ACCOUNT_NAME)"
 
-            if (!(Test-Path "iaac")) {
+            if (!(Test-Path "frontend/iaac")) {
               Write-Host "iaac directory not found, using default storage account"
               Write-Host "##vso[task.setvariable variable=resolvedStorageAccount]$defaultStorage"
               return
             }
 
 
-            cd iaac
+            cd frontend/iaac
             
             terraform init \
               -backend-config="resource_group_name=tfstate-rg" \
