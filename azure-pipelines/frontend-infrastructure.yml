@@ -8,15 +8,14 @@
 name: frontend-infrastructure
 
 trigger:
-  push:
-    branches: 
-      include: 
-        - main
+  branches: 
+    include: 
+      - main
 
-    paths:
-      include: 
-        - 'frontend/iaac/**'                               # Trigger only when infra files change
-        - 'azure-pipelines/frontend-infrastructure.yml'
+  paths:
+    include: 
+      - 'frontend/iaac/**'                               # Trigger only when infra files change
+      - 'azure-pipelines/frontend-infrastructure.yml'
 
 # 🏗️ Agent Pool
 pool:
