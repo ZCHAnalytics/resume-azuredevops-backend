@@ -126,3 +126,34 @@ a:hover {
         font-size: 1.2em;
     }
 }
+.project-links {
+  margin-top: 10px;
+  font-size: 0.95em;
+}
+
+.project-links strong {
+  color: #333;
+  margin-right: 5px;
+}
+
+.project-links a {
+  text-decoration: none;
+  color: #0066cc;
+  border-bottom: 1px dotted #0066cc;
+  transition: all 0.3s ease;
+}
+
+.project-links a:hover {
+  color: #0052a3;
+  border-bottom-style: solid;
+}
+
+.ubds-callout .project-links ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 5px 0;
+}
+
+.ubds-callout .project-links ul li {
+  margin-bottom: 5px;
+}
