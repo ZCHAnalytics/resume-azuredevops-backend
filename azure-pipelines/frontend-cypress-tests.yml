@@ -21,6 +21,16 @@ jobs:
     steps:
       - checkout: self 
 
+
+      - task: PowerShell@2
+        displayName: 'Check current directory and list files'
+        inputs:
+          targetType: 'inline'
+          script: |
+            pwd
+            ls -Force
+
+
       - task: NodeTool@0 
         inputs: 
           versionSpec: '16.x'
