@@ -72,7 +72,7 @@ stages:
 
           - powershell: |
               Write-Host "Listing terraform commands in working directory"
-              Get-ChildItem -Path '$(terraformWorkingDir)' -Recurse -Filter '*.ps1','*.sh','*.bat'
+              Get-ChildItem -Path '$(terraformWorkingDir)' -Recurse iInclude '*.ps1','*.sh','*.bat' -File
 
 
           # 🔧 Terraform Init using Remote Backend
