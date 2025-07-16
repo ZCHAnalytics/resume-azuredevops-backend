@@ -12,9 +12,9 @@ The backend service powers a **visitor counter API** exposed via Azure Functions
 
 ### ☁️ Infrastructure & Deployment
 
--  Fully automated **Infrastructure as Code (IaC)** using **Terraform**
+-  Fully automated **Infrastructure as Code** using **Terraform**
 -  Deployed using **Azure DevOps Pipelines**
--  Remote state stored securely in Azure Storage
+-  Remote state stored securely in separate Azure Storage
 -  CDN-enabled static website (HTTPS enforced via Azure CDN)
 
 ### 🛠 Backend (API)
@@ -48,6 +48,6 @@ The backend service powers a **visitor counter API** exposed via Azure Functions
 
 ##  Notes
 
-- Commits are signed and saved using `gpentry`. This is **optional** but a good DevSecOps practice as it enables [GPG signing](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits) and ensures trust and provenance of your commits.
+- Commits are signed and saved using `GPG secure commit`.
 
 ---
