@@ -1,297 +1,224 @@
-name: Deploy Frontend Files
+# ========================
+# ✅ PIPELINE: Deploy Frontend Web Pages with Terraform
+# ========================
+# 🎯 Trigger pipeline on changes to main branch and specific files
 
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'frontend/**'                             # Trigger only when web files change
-      - '.github/workflows/frontend-deploy.yml'   
+name: deploy-frontend-files
 
-  workflow_dispatch:                            # Allow manual triggering from GitHub UI
+trigger:
+  branches:
+    include: 
+    - main
+  
+  paths:
+    include:
+      - 'frontend/iaac/**'                             # Trigger only when web files change
+      - 'azure-pipelines/frontend-web-deploy.yml'   
 
-  workflow_run:
-    workflows: ["Frontend Infrastructure"]
-    types:
-      - completed
+
+# use local agent on windows
+pool:
+  name: 'Default'
 
 jobs:
-  deploy-frontend-files:
-    name: Deploy Website Files
-    runs-on: ubuntu-latest
-
+  - job: deploy_web_files
+    displayName: Deploy Web Files
+    pool:
+      name: 'Default'
+    
     env:
-      STORAGE_ACCOUNT_NAME: zchresumestrfrontend
-      CDN_ENDPOINT_NAME: shecodesclouds
-      CDN_PROFILE_NAME: resume-cdn-profile
-      RESOURCE_GROUP_NAME: resume-frontend-rg
+      STORAGE_ACCOUNT_NAME: ubdswebstorage
+      CDN_ENDPOINT_NAME: ubds-resume
+      #CDN_PROFILE_NAME: ubds-cdn-profile
+      RESOURCE_GROUP_NAME: ubds-rg
+      #frontend_origin_urls: https://ubds-resume.azureedge.net
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3           # Allow manual triggering from GitHub UI
+      - checkout: self 
 
-      # --- Security Scanning Steps Start ---
+      # # --- Security Scanning Steps Start ---
 
-      - name: Install Syft
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+      # - name: Install Syft
+      #   run: |
+      #     curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Generate SBOM for Frontend
-        run: syft frontend -o json > sbom.json
+      # - name: Generate SBOM for Frontend
+      #   run: syft frontend -o json > sbom.json
 
-      - name: Upload SBOM Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-frontend
-          path: sbom.json
+      # - name: Upload SBOM Artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: sbom-frontend
+      #     path: sbom.json
 
-      - name: Install Grype
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+      # - name: Install Grype
+      #   run: |
+      #     curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Run Grype Vulnerability Scan
-        run: |
-          grype sbom:sbom.json -o table --fail-on medium
+      # - name: Run Grype Vulnerability Scan
+      #   run: |
+      #     grype sbom:sbom.json -o table --fail-on medium
       
-      # --- Security Scanning Steps End ---
-
-      - name: Mask GitHub Token
-        run: echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"  # Hide GitHub token in logs
-
-      - name: Mask Azure Subscription ID
-        run: echo "::add-mask::${{ secrets.AZURE_SUBSCRIPTION_ID }}"  # Hide subscription ID in logs
-
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}      # JSON secret containing SP credentials
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2        # Installs Terraform CLI
-        with: 
-          terraform_version: 1.12.2
-          # TROUBLESHOOTING FIX #1: Added terraform_wrapper: false
-          # The hashicorp/setup-terraform@v2 action by default wraps terraform commands
-          # and adds debug output like "[command]/path/to/terraform-bin output -raw ..."
-          # This was corrupting our terraform output values, causing storage account names
-          # to include debug text, which made Azure commands fail.
-          terraform_wrapper: false # This prevents the wrapper that adds debug output 
-
-      - name: Get Storage Account Name
-        id: get-storage
-        run: |
-          
-          # Check if iaac directory exists
-          if [ ! -d "iaac" ]; then
-            echo "❌ iaac directory not found"
-            echo "storage_account=${{ env.STORAGE_ACCOUNT_NAME }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          cd iaac
-          
-          # TROUBLESHOOTING FIX #2: Added proper backend configuration
-          # Initially, terraform init was running without backend config, so it couldn't
-          # access the remote state where infrastructure outputs are stored.
-          # We matched this with the infrastructure deployment workflow to ensure
-          # we're reading from the same remote state.
-          terraform init \
-            -backend-config="resource_group_name=tfstate-rg" \
-            -backend-config="storage_account_name=zchtfstatestorageacc" \
-            -backend-config="container_name=tfstate" \
-            -backend-config="key=frontend.tfstate" \
-            -input=false \
-            -no-color
-          
-          # Get the storage account name from Terraform outputs
-          if terraform state list > /dev/null 2>&1; then
-            STORAGE_ACCOUNT=$(terraform output -raw storage_account_name 2>/dev/null || echo "")
+      # # --- Security Scanning Steps End ---
+      
+      - task: AzureCLI@2
+        inputs: 
+          azureSubscription: 'ubds-sp-connection'
+          scriptType: 'ps'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            Write-Host "Logged in to Azure CLI"
             
-            if [[ -z "$STORAGE_ACCOUNT" || "$STORAGE_ACCOUNT" == *"::debug::"* ]]; then
-              echo "⚠️ Could not get storage account from Terraform state, using default"
-              STORAGE_ACCOUNT="${{ env.STORAGE_ACCOUNT_NAME }}"
-            else
-              echo "✅ Got storage account from Terraform: $STORAGE_ACCOUNT"
-            fi
-          else
-            echo "⚠️ No Terraform state found, using default"
-            STORAGE_ACCOUNT="${{ env.STORAGE_ACCOUNT_NAME }}"
-          fi
-          
-          echo "storage_account=$STORAGE_ACCOUNT" >> "$GITHUB_OUTPUT"
+      - task: PowerShell@2 
+        name: GetStorage
+        displayName:: Get Sotrage Account Name
+        inputs:
+          targetType: inline
+          script: |
+        
+            $defaultStorage = "$(STORAGE_ACCOUNT_NAME)"
+
+            if (!(Test-Path "iaac")) {
+              Write-Host "iaac directory not found, using default storage account"
+              Write-Host "##vso[task.setvariable variable=resolvedStorageAccount]$defaultStorage"
+              return
+            }
+
+
+            cd iaac
+            
+            terraform init \
+              -backend-config="resource_group_name=tfstate-rg" \
+              -backend-config="storage_account_name=ubdswebstorage" \
+              -backend-config="container_name=tfstate" \
+              -backend-config="key=frontend.tfstate" \
+              -input=false \
+              -no-color
+        
+            # Get the storage account name from Terraform outputs
+            $storage = terraform output -raw storage_account_name 2>$null
+            if (-not $storage) {
+              Write-Host "Using default storage account: $defaultStorage"
+              $storage = $defaultStorage
+            }
+            
+            Write-Host "##vso[task.setvariable variable=resolvedStorageAccount]$storage"
+
 
       # TROUBLESHOOTING FIX #4: Added verification steps
       # These steps ensure the storage account exists and has static website enabled
       # before attempting to upload files, providing better error messages
-      - name: Verify Storage Account and Static Website
-        run: |
-          STORAGE_ACCOUNT="${{ steps.get-storage.outputs.storage_account }}"
-          
-          # Check if storage account exists
-          STORAGE_EXISTS=$(az storage account show \
-            --name "${STORAGE_ACCOUNT}" \
-            --query "name" -o tsv 2>/dev/null || echo "")
-          
-          if [[ -z "$STORAGE_EXISTS" ]]; then
-            echo "❌ Storage account not found: ${STORAGE_ACCOUNT}"
-            exit 1
-          fi
-          
-          echo "✅ Storage account verified: $STORAGE_EXISTS"
-          
-          # Check if static website is enabled
-          STATIC_WEBSITE=$(az storage blob service-properties show \
-            --account-name "${STORAGE_ACCOUNT}" \
-            --auth-mode login \
-            --query "staticWebsite.enabled" -o tsv 2>/dev/null || echo "false")
-          
-          if [[ "$STATIC_WEBSITE" != "true" ]]; then
-            echo "❌ Static website is not enabled on storage account"
-            exit 1
-          fi
-          
-          echo "✅ Static website is enabled"
 
-      - name: Check Frontend Directory
-        run: |
-          if [ ! -d "./frontend" ]; then
-            echo "❌ Frontend directory not found"
-            exit 1
-          fi
-          
-          echo "📁 Frontend files to upload:"
-          ls -la ./frontend/
-
-      - name: Deploy to Azure Storage
-        id: deploy-storage
-        env:
-          STORAGE_ACCOUNT: ${{ steps.get-storage.outputs.storage_account }}
-        run: |
-          echo "📤 Uploading website files to storage account: ${STORAGE_ACCOUNT}"
-          
-          # TROUBLESHOOTING FIX #5: Added fallback authentication method
-          # If the service principal doesn't have proper Storage Blob Data Contributor role,
-          # the login auth mode might fail. We added a fallback to use storage account keys.
-          # Try upload with login auth
-          if az storage blob upload-batch \
-            --account-name "${STORAGE_ACCOUNT}" \
-            --auth-mode login \
-            --source ./frontend \
-            --destination '$web' \
-            --overwrite; then
-            echo "✅ Upload completed successfully with login auth"
-          else
-            echo "⚠️ Login auth failed, trying with account key..."
+      - task: PowerShell@2
+        displayName: Verify Storage Account
+        inputs:
+          targetType: inline
+          script: |
+            $account = "$(resolvedStorageAccount)"
+            $exists = az storage account show --name $account --query "name" -o tsv 2>$null
+            if (-not $exists) {
+              Write-Error "Storage account $account not found"
+              exit 1
+            }
             
-            # TROUBLESHOOTING FIX #6: Get correct resource group for storage account
-            # Storage account might be in a different resource group than the frontend RG
-            STORAGE_RG=$(az storage account show \
-              --name "${STORAGE_ACCOUNT}" \
-              --query "resourceGroup" -o tsv)
-            
-            # Get account key as fallback
-            ACCOUNT_KEY=$(az storage account keys list \
-              --account-name "${STORAGE_ACCOUNT}" \
-              --resource-group "${STORAGE_RG}" \
-              --query "[0].value" -o tsv)
-            
-            az storage blob upload-batch \
-              --account-name "${STORAGE_ACCOUNT}" \
-              --account-key "${ACCOUNT_KEY}" \
-              --source ./frontend \
-              --destination '$web' \
-              --overwrite
-            
-            echo "✅ Upload completed successfully with account key"
-          fi
           
-          echo "storage_account=${STORAGE_ACCOUNT}" >> "$GITHUB_OUTPUT"
+            # Check if static website is enabled
+            $staticEnabled = az storage blob service-properties show --account-name $account --query "staticWebsite.enabled" -o tsv 2>$null
+            if ($staticEnabled -ne "true") {
+              Write-Error "Static website not enabled on $account"
+              exit 1
+            }
+      - task: PowerShell@2
+        displayName: Upload Web Files
+        inputs:
+          targetType: inline
+          script: |
+            $account = "$(resolvedStorageAccount)"
+            if (!(Test-Path "./frontend")) {
+              Write-Error "Frontend folder not found"
+              exit 1
+            }
 
-      - name: Get CDN Details from Terraform
-        id: get-cdn
-        run: |
-          cd iaac
-          
-          # No need to init again, already done in previous step
-          CDN_ENDPOINT=$(terraform output -raw cdn_endpoint_name 2>/dev/null || echo "")
-          CDN_PROFILE=$(terraform output -raw cdn_profile_name 2>/dev/null || echo "")
-          
-          # TROUBLESHOOTING FIX #7: Check for debug output contamination
-          # Even with terraform_wrapper: false, we check if outputs contain debug text
-          # and fall back to environment variables if they do
-          if [[ "$CDN_ENDPOINT" == *"::debug::"* ]] || [[ -z "$CDN_ENDPOINT" ]]; then 
-            echo "⚠️ Could not get clean CDN endpoint from Terraform, using default"
-            CDN_ENDPOINT="${{ env.CDN_ENDPOINT_NAME }}"
-          fi
-          
-          if [[ "$CDN_PROFILE" == *"::debug::"* ]] || [[ -z "$CDN_PROFILE" ]]; then 
-            echo "⚠️ Could not get clean CDN profile from Terraform, using default"
-            CDN_PROFILE="${{ env.CDN_PROFILE_NAME }}"
-          fi
-          
-          echo "cdn_endpoint=$CDN_ENDPOINT" >> "$GITHUB_OUTPUT"
-          echo "cdn_profile=$CDN_PROFILE" >> "$GITHUB_OUTPUT"
-          
-      - name: Purge CDN Cache
-        env:
-          RESOURCE_GROUP_NAME: ${{ env.RESOURCE_GROUP_NAME }}
-          CDN_PROFILE_NAME: ${{ steps.get-cdn.outputs.cdn_profile }}
-          CDN_ENDPOINT_NAME: ${{ steps.get-cdn.outputs.cdn_endpoint }}
-        run: |
-          echo "🔄 Purging CDN cache..."
-          
-          # TROUBLESHOOTING FIX #8: Verify CDN exists before purging
-          # Prevents errors if CDN endpoint doesn't exist yet
-          CDN_EXISTS=$(az cdn endpoint show \
-            --resource-group "${RESOURCE_GROUP_NAME}" \
-            --profile-name "${CDN_PROFILE_NAME}" \
-            --name "${CDN_ENDPOINT_NAME}" \
-            --query "name" -o tsv 2>/dev/null || echo "")
-          
-          if [[ -n "$CDN_EXISTS" ]]; then
-            az cdn endpoint purge \
-              --resource-group "${RESOURCE_GROUP_NAME}" \
-              --profile-name "${CDN_PROFILE_NAME}" \
-              --name "${CDN_ENDPOINT_NAME}" \
-              --content-paths "/*" \
-              --no-wait
-            echo "✅ CDN cache purge initiated"
-          else
-            echo "⚠️ CDN endpoint not found, skipping cache purge"
-          fi
+            Write-Host "Uploading to $account"
+            $success = $false
 
-      - name: Deployment Summary
-        run: |
-          echo "### Frontend Deployed! 🎨" >> $GITHUB_STEP_SUMMARY
-          echo "- **Files uploaded to**: ${{ steps.deploy-storage.outputs.storage_account }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **CDN URL**: https://${{ steps.get-cdn.outputs.cdn_endpoint }}.azureedge.net" >> $GITHUB_STEP_SUMMARY
-          echo "- **Note**: CDN cache purge initiated - changes should be live in 2-10 minutes." >> $GITHUB_STEP_SUMMARY
-          
-          # Also try to get the static website URL from Terraform
-          cd iaac
-          STATIC_URL=$(terraform output -raw static_website_url 2>/dev/null || echo "")
-          if [[ -n "$STATIC_URL" ]]; then
-            echo "- **Static Website URL**: $STATIC_URL" >> $GITHUB_STEP_SUMMARY
-          fi
+            try {
+              az storage blob upload-batch `
+                --account-name $account `
+                --auth-mode login `
+                --source ./frontend `
+                --destination '$web' `
+                --overwrite
+              $success = $true
+            } catch {
+              Write-Warning "Login auth failed, trying with key..."
+            }
 
-  dependency-scan:
-    name: Scan JavaScript Dependencies
-    runs-on: ubuntu-latest
-    
-    defaults:
-      run: 
-        working-directory: frontend
+            if (-not $success) {
+              $rg = az storage account show --name $account --query "resourceGroup" -o tsv
+              $key = az storage account keys list --account-name $account --resource-group $rg --query "[0].value" -o tsv
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+              az storage blob upload-batch `
+                --account-name $account `
+                --account-key $key `
+                --source ./frontend `
+                --destination '$web' `
+                --overwrite
+            }
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'  
+      - task: PowerShell@2
+        displayName: Purge CDN Cache
+        inputs:
+          targetType: inline
+          script: |
+            $cdn = "$(CDN_ENDPOINT_NAME)"
+            $profile = "$(CDN_PROFILE_NAME)"
+            $rg = "$(RESOURCE_GROUP_NAME)"
 
-      - name: Install dependencies
-        run: npm install
-        
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate
+            $exists = az cdn endpoint show --resource-group $rg --profile-name $profile --name $cdn --query "name" -o tsv 2>$null
+            if ($exists) {
+              az cdn endpoint purge `
+                --resource-group $rg `
+                --profile-name $profile `
+                --name $cdn `
+                --content-paths "/*" `
+                --no-wait
+            } else {
+              Write-Warning "CDN endpoint not found, skipping purge"
+            }
+
+      - task: PowerShell@2
+        displayName: Deployment Summary
+        inputs:
+          targetType: inline
+          script: |
+            $cdnUrl = "https://$(CDN_ENDPOINT_NAME).azureedge.net"
+            Write-Host "##vso[task.setvariable variable=cdnUrl]$cdnUrl"
+            Write-Host "Frontend deployed to $cdnUrl"
+
+  # Optional separate job for NPM audit:
+  - job: dependency_scan
+    displayName: JavaScript Dependency Scan
+    pool:
+      name: 'Default'
+
+      steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '22.x'
+
+      - task: PowerShell@2
+        displayName: Install Node Modules
+        inputs:
+          targetType: inline
+          workingDirectory: 'frontend'
+          script: |
+            npm install
+
+      - task: PowerShell@2
+        displayName: NPM Audit
+        inputs:
+          targetType: inline
+          workingDirectory: 'frontend'
+          script: |
+            npm audit --audit-level=moderate
