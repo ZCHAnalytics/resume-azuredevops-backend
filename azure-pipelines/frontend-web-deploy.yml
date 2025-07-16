@@ -77,21 +77,14 @@ jobs:
             Write-Output "Listing files in frontend folder:"
             Get-ChildItem "$(Build.SourcesDirectory)\frontend"
 
-
-      - task: PowerShell@2
-        displayName: Search for sbom.json in frontend recursively
-        inputs:
-          targetType: inline
-          workingDirectory: 'frontend'
-          script: |
-            Write-Output "Searching for sbom.json in frontend recursively:"
-            Get-ChildItem -Path . -Filter sbom.json -Recurse
-
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
         inputs:
           PathtoPublish: '$(Build.SourcesDirectory)\frontend\sbom.json'
           ArtifactName: 'sbom-frontend'
+          script: |
+            Write-Output "Listing files in frontend folder:"
+            Get-ChildItem "$(Build.SourcesDirectory)\frontend"
 
       - task: PowerShell@2
         displayName: Check Grype Version # preinstalled on local agent 
@@ -106,7 +99,9 @@ jobs:
           targetType: inline
           workingDirectory: 'frontend'
           script: |
-            grype sbom:sbom.json -o table --fail-on medium
+            grype sbom:$(Build.SourcesDirectory)\frontend\sbom.json -o table --fail-on medium
+
+            #grype sbom:sbom.json -o table --fail-on medium
 
       # --- Security Scanning Steps End ---
       
