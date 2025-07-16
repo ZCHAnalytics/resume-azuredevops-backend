@@ -98,8 +98,12 @@ jobs:
               -backend-config="key=$(tfstateKey)" `
               -input=false `
               -no-color
+            Write-Host "tfstateContainer = $(tfstateContainer)"
+            Write-Host "Running terraform init with backend-config container_name=$(tfstateContainer)"
+
 
             # Get the storage account name from Terraform outputs
+
             $storage = terraform output -raw storage_account_name 2>$null
             if (-not $storage) {
               Write-Host "Using default storage account: $defaultStorage"
