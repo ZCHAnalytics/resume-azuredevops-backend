@@ -5,10 +5,14 @@
 
 name: deploy-frontend-files
 
-trigger:
-  branches:
-    include: 
-      - main
+resources: 
+  pipelines:
+    - pipeline: fronendInfra
+      source: frontend-infrastructure 
+      trigger: 
+        branches:
+          include: 
+            - main
   
   paths:
     include:
