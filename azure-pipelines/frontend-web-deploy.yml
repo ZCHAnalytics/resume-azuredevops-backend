@@ -63,7 +63,11 @@ jobs:
           workingDirectory: 'frontend'
           script: |
             syft . -o json > sbom.json
-
+            if (Test-Path sbom.json) {
+              Write-Output "sbom.json created successfully."
+            } else {
+              Write-Error "sbom.json not found after running syft."
+            }
 
       - task: PowerShell@2
         displayName: Search for sbom.json in frontend recursively
@@ -78,7 +82,7 @@ jobs:
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
         inputs:
-          PathtoPublish: 'frontend/sbom.json' # Forward slash for azure pipeline
+          PathtoPublish: 'frontend\sbom.json'
           ArtifactName: 'sbom-frontend'
 
       - task: PowerShell@2
