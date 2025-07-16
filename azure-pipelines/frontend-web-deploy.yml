@@ -88,14 +88,16 @@ jobs:
               return
             }
 
+            Write-Host "###[group]Terraform Init"
 
             cd frontend/iaac
             
-            terraform init -reconfigure `
-              -backend-config="resource_group_name=$(tfstateResourceGroup)" `
-              -backend-config="storage_account_name=$(tfstateStorageAccount)" `
-              -backend-config="container_name=$(tfstateContainer)" `
-              -backend-config="key=$(tfstateKey)" `
+            terraform init `
+              -reconfigure `
+              "-backend-config=resource_group_name=$(tfstateResourceGroup)" `
+              "-backend-config=storage_account_name=$(tfstateStorageAccount)" `
+              "-backend-config=container_name=$(tfstateContainer)" `
+              "-backend-config=key=$(tfstateKey)" `
               -input=false `
               -no-color
 
@@ -103,6 +105,9 @@ jobs:
               Write-Error "Terraform init failed"
               exit 1
             }
+            Write-Host "##[endgroup]"
+
+            Write-Host "##[group]Getting Storage Account Output"
 
             $storage = terraform output -raw storage_account_name 2>&1
             if ($LASTEXITCODE -ne 0) {
