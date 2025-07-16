@@ -5,6 +5,8 @@
 
 name: deploy-frontend-files
 
+trigger: none 
+
 resources: 
   pipelines:
     - pipeline: fronendInfra
