@@ -68,6 +68,13 @@ stages:
               inlineScript: |
                 az --version 
 
+
+
+          - powershell: |
+              Write-Host "Listing terraform commands in working directory"
+              Get-ChildItem -Path '$(terraformWorkingDir)' -Recurse -Filter '*.ps1','*.sh','*.bat'
+
+
           # 🔧 Terraform Init using Remote Backend
           - task: TerraformTaskV4@0
             displayName: 'terraform Task to initialise'
