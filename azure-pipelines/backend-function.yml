@@ -44,7 +44,7 @@ jobs:
       - powershell: |
           pip install -r backend/requirements.txt
           cd backend # makes sure that function is published from the backend folder 
-          func azure functionapp publish ubds-function-app --python
+          func azure functionapp publish ubds-func-app --python
         displayName: 'Deploy Azure Function'
 
       # Test the deployed function endpoint to verify deployment
