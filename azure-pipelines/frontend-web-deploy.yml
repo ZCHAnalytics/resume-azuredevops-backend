@@ -95,7 +95,7 @@ jobs:
             Get-Command terraform | Format-List
 
             terraform version
-            
+
 
             terraform init `
               -reconfigure `
@@ -110,6 +110,12 @@ jobs:
               Write-Error "Terraform init failed"
               exit 1
             }
+
+            Write-Host "##[group]DEBUG: List all terraform outputs"
+            terraform output
+            Write-Host "##[endgroup]"
+            exit $LASTEXITCODE
+
             Write-Host "##[endgroup]"
 
             Write-Host "##[group]Getting Storage Account Output"
