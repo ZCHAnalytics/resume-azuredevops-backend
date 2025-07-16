@@ -28,7 +28,68 @@ jobs:
     steps:
       # Checkout repository source code
       - checkout: self
-      # required Pythonfunc --version already installed on local agent
+      # required Python func --version already installed on local agent
+
+      # --------------------------- SBOM + Grype Security Steps -----------------------------
+      
+      - task: PowerShell@2
+        displayName: Generate SBOM
+        inputs:
+          targetType: inline
+          workingDirectory: '$(Build.SourcesDirectory)'
+          script: |
+            $sbomPath = Join-Path -Path "$(Build.SourcesDirectory)\backend" -ChildPath "sbom.json"
+            
+            # Generate SBOM directly to file without encoding issues
+            & syft frontend --output json=$sbomPath
+            
+            # Verify the file exists
+            if (Test-Path $sbomPath) {
+              Write-Output "sbom.json created successfully at: $sbomPath"
+              
+              # Display file size for verification
+              $fileInfo = Get-Item $sbomPath
+              Write-Output "File size: $($fileInfo.Length) bytes"
+              
+              # Optionally validate JSON format
+              try {
+                $jsonContent = Get-Content $sbomPath -Raw | ConvertFrom-Json
+                Write-Output "JSON validation successful"
+              } catch {
+                Write-Error "JSON validation failed: $_"
+              }
+            } else {
+              Write-Error "sbom.json NOT found at expected path."
+              exit 1
+            }
+
+      - task: PowerShell@2
+        displayName: Scan SBOM with Grype
+        inputs:
+          targetType: inline
+          workingDirectory: '$(Build.SourcesDirectory)\backend'
+          script: |
+            # Run Grype scan on the SBOM
+            Write-Output "Running Grype scan on SBOM..."
+            
+            grype sbom:sbom.json -o table --fail-on medium
+
+
+      - task: PublishBuildArtifacts@1
+        displayName: Upload SBOM Artifact
+        inputs:
+          PathtoPublish: '$(Build.SourcesDirectory)\backend\sbom.json'
+          ArtifactName: 'sbom-backend'
+
+      - task: PowerShell@2
+        displayName: List files in backend folder after scanning
+        inputs:
+          targetType: inline
+          script: |
+            Write-Output "Listing files in backend folder:"
+            Get-ChildItem "$(Build.SourcesDirectory)\backend" | Format-Table Name, Length, LastWriteTime
+      # --- Security Scanning Steps End ---
+
       # Azure Functions Core Tools are already installed on local agent func --version > 4.0.7512 
 
       # Azure Login: In Azure DevOps, use AzureCLI@2 task for login instead of azure/login@v1 GitHub Action
