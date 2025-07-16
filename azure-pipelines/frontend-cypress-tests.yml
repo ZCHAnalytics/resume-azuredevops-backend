@@ -17,7 +17,7 @@ pool:
 
 
 jobs:
-  - job: e2e-tests
+  - job: e2etests
     displayName: "Run Cypress Tests"
     steps:
       - checkout: self 
