@@ -277,7 +277,7 @@ stages:
                   --query "exists" -o tsv
               
               if ($stateExists -eq "true") {
-                  Write-Host "✅ Remote state file '$(tfstateKey)' successfully created!"
+                  Write-Host "Remote state file '$(tfstateKey)' successfully created!"
                   
                   # Get state file details
                   $blobDetails = az storage blob show `
@@ -287,27 +287,27 @@ stages:
                       --auth-mode login `
                       --query "{size:properties.contentLength, lastModified:properties.lastModified}" -o json | ConvertFrom-Json
                   
-                  Write-Host "📊 State file details:"
+                  Write-Host "State file details:"
                   Write-Host "   Size: $($blobDetails.size) bytes"
                   Write-Host "   Last Modified: $($blobDetails.lastModified)"
               } else {
-                  Write-Error "❌ Remote state file was not created!"
+                  Write-Error "Remote state file was not created!"
                   exit 1
               }
               
               # Verify Terraform can read the state
               Write-Host ""
-              Write-Host "🔍 Verifying Terraform can read remote state:"
+              Write-Host "Verifying Terraform can read remote state:"
               cd $(terraformWorkingDir)
               terraform state list
               
               $stateItems = terraform state list
               if ($stateItems) {
-                  Write-Host "✅ Terraform successfully connected to remote state"
-                  Write-Host "📋 Resources in state:"
+                  Write-Host "Terraform successfully connected to remote state"
+                  Write-Host "Resources in state:"
                   $stateItems | ForEach-Object { Write-Host "   - $_" }
               } else {
-                  Write-Warning "⚠️ No resources found in state (this is OK for first run)"
+                  Write-Warning "No resources found in state (this is OK for first run)"
               }
 
         # 🧾 Extract outputs and create summary
