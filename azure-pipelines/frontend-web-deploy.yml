@@ -23,6 +23,7 @@ pool:
 variables:
   STORAGE_ACCOUNT_NAME: ubdswebstorage
   CDN_ENDPOINT_NAME: ubds-resume
+  CDN_PROFILE_NAME: ubds-cdn-profile
   RESOURCE_GROUP_NAME: ubds-rg
   tfstateResourceGroup: 'tfstate-ubds-rg'
   tfstateStorageAccount: 'tfstateubds7270'
@@ -225,7 +226,10 @@ jobs:
                 --source ./frontend `
                 --destination '$web' `
                 --overwrite
-
+                --pattern "*.html" `
+                --pattern "*.css" `
+                --pattern "*.js" `
+                --pattern "sbom.json"
               Write-Host "Upload completed"
 
       # ---- Purge CDN cache-----
