@@ -24,9 +24,9 @@ variables:
   terraformWorkingDir: 'backend/iaac'
   backendWorkingDir: 'backend'
 
-  tfstateResourceGroup: 'tfstate-rg-ubds'
-  tfstateStorageAccount: 'tfstateubds27567'
-  tfstateContainer: 'tfstate'
+  tfstateResourceGroup: 'tfstate-ubds-rg'
+  tfstateStorageAccount: 'tfstateubds7270'
+  tfstateContainer: 'tfstateubds'
   tfstateKey: 'ubds.tfstate'
 
 # ========================
