@@ -2,7 +2,7 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f6f8;
-    color: #333;
+    color: #003366; /* UBDS navy */
     line-height: 1.6;
     margin: 0;
     padding: 0 20px;
@@ -10,7 +10,7 @@ body {
 
 /* Header */
 header#main-header {
-    background-color: #0078d4;
+    background-color: #003366; /* UBDS navy */
     color: white;
     padding: 40px 20px;
     text-align: center;
@@ -34,8 +34,8 @@ header#main-header p {
 }
 
 h2 {
-    color: #0078d4;
-    border-bottom: 2px solid #0078d4;
+    color: #00ADEF; /* UBDS accent */
+    border-bottom: 2px solid #00ADEF;
     padding-bottom: 6px;
     margin-top: 30px;
     font-size: 1.5em;
@@ -54,12 +54,14 @@ h2 {
 
 /* Links */
 a {
-    color: #005a9e;
+    color: #00ADEF; /* UBDS accent */
     text-decoration: none;
+    transition: all 0.2s ease-in-out;
 }
 
 a:hover {
     text-decoration: underline;
+    color: #0078D4;
 }
 
 /* Visitor Counter */
@@ -71,7 +73,7 @@ a:hover {
 #visitor-count {
     font-weight: bold;
     font-size: 1.4em;
-    color: #0078d4;
+    color: #00ADEF;
 }
 
 /* Footer */
@@ -80,5 +82,47 @@ a:hover {
     margin-top: 60px;
     padding: 20px;
     font-size: 0.9em;
+    background-color: #f0f2f5;
+    border-top: 2px solid #003366;
     color: #666;
+}
+/* UBDS Callout Box */
+.ubds-callout {
+    background-color: #e6f7fb;
+    border-left: 5px solid #00ADEF;
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.ubds-callout h4 {
+    margin-top: 0;
+    color: #003366;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    body {
+        padding: 0 10px;
+    }
+
+    header#main-header h1 {
+        font-size: 1.8em;
+    }
+
+    header#main-header p {
+        font-size: 1em;
+    }
+
+    h2 {
+        font-size: 1.3em;
+    }
+
+    .resume-section {
+        padding: 0;
+    }
+
+    #visitor-count {
+        font-size: 1.2em;
+    }
 }

@@ -21,7 +21,7 @@ async function updateVisitorCount() {
         const visitorId = getVisitorId();
         
         // No key needed since it's anonymous
-        const API_URL = 'https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter'; 
+        const API_URL = 'https://ubds-func-app.azurewebsites.net/api/VisitorCounter'; 
         const response = await fetch(`${API_URL}?visitorId=${encodeURIComponent(visitorId)}`);
         
         if (response.ok) {

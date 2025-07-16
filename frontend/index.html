@@ -9,9 +9,12 @@
       line-height: 1.6;
       font-family: Arial, sans-serif;
       margin: 2rem;
+      background-color: #f4f4f4;
+      color: #003366; /* UBDS primary */
     }
     h1, h2, h3 {
       margin-top: 2rem;
+      color: #00ADEF; /* UBDS accent */
     }
     ul {
       padding-left: 1.5rem;
@@ -21,11 +24,21 @@
       text-align: center;
     }
     a {
-      color: #0078D4;
+      color: #00ADEF;
       text-decoration: none;
     }
     a:hover {
       text-decoration: underline;
+    }
+    #main-header {
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #003366;
+    }
+    #main-footer {
+      padding-top: 1rem;
+      border-top: 2px solid #003366;
+      font-size: 0.9rem;
+      color: #666;
     }
   </style>
 </head>
@@ -40,70 +53,89 @@
 
     <section id="skills" class="resume-section">
       <h2>Skills & Certifications</h2>
+
       <ul>
         <li><strong>Certifications:</strong> AZ-900 • AI-900</li>
-        <li><strong>Cloud & IaC:</strong> Azure • Terraform • GitHub Actions</li>
+        <li><strong>Cloud & IaC:</strong> Azure • Terraform • Azure DevOps • GitHub Actions</li>
         <li><strong>Serverless:</strong> Azure Functions • Cosmos DB (Table API)</li>
         <li><strong>Languages:</strong> Python • PowerShell • Bash • SQL</li>
-        <li><strong>Containers & Orchestration:</strong> Docker • Kubernetes</li>
         <li><strong>Projects & Labs:</strong> Cloud Resume Challenge • Kubernetes Resume Challenge</li>
       </ul>
     </section>
 
     <section id="projects" class="resume-section">
 
-      <h3>Cloud Projects</h3>
-      <ul>
-        <li>
+      <h2>Cloud Projects</h2>
+
+      <div class="ubds-callout">
+        <h4>Cloud Resume Challenge with Azure DevOps)</h4>
+        <p>
+          Created a CI/CD-enabled version of the Cloud Resume Challenge using Azure-native services and Infrastructure as Code. 
+          Built with Terraform, Azure DevOps Pipelines, and GitHub, deployed securely to align with public sector readiness requirements.
+        </p>
+        <p>
           <strong><a href="https://github.com/ZCHAnalytics/cloud-resume-challenge" target="_blank">
-            Cloud Resume Challenge (Azure, Terraform, CI/CD)
-          </a></strong>
-          <ul>
-            <li>Hosted static resume site on Azure with serverless visitor tracking via Azure Functions + Cosmos DB.</li>
-            <li>Infrastructure as Code (Terraform), CI/CD with GitHub Actions, SBOM & vulnerability scanning.</li>
-            <li>
-              <a href="https://github.com/ZCHAnalytics/shecodesclouds-frontend" target="_blank">Frontend Code</a> |
-              <a href="https://github.com/ZCHAnalytics/shecodesclouds-backend" target="_blank">Backend Code</a>
-            </li>
-          </ul>
-        </li>
+            View Project
+          </a></strong> |
+          <a href="https://github.com/ZCHAnalytics/shecodesclouds-frontend" target="_blank">Frontend</a> |
+          <a href="https://github.com/ZCHAnalytics/shecodesclouds-backend" target="_blank">Backend</a>
+        </p>
+      </div>
 
-        <li>
+      <div class="ubds-callout">
+        <h4>Cloud Resume Challenge with GithubActions</h4>
+        <p>
+          Implemented Infrastructure as Code and CI/CD using GitHub Actions. 
+          Used Azure Static Web Apps, Azure Functions and Cosmos DB with automatic deployment pipelines, SBOM and security scanning.
+        </p>
+        <p>
+          <strong><a href="https://github.com/ZCHAnalytics/cloud-resume-challenge" target="_blank">
+            View Project
+          </a></strong>
+        </p>
+      </div>
+
+      <div class="ubds-callout">
+        <h4>Azure Database Migration & Recovery</h4>
+        <p>
+          Restored a production SQL Database into a development-safe environment. 
+          Added automated backup, implemented disaster recovery strategy, and secured access via Entra ID.
+        </p>
+        <p>
           <strong><a href="https://github.com/ZCHAnalytics/azure-database-migration" target="_blank">
-            Azure Database Migration
+            View Project
           </a></strong>
-          <ul>
-            <li>Restored production DB into a dev-safe environment; implemented disaster recovery with Entra ID auth.</li>
-          </ul>
-        </li>
-      </ul>
+        </p>
+      </div>
 
-      <h3>Data Projects</h3>
-      <ul>
-        <li>
+      <div class="ubds-callout">
+        <h4>Retail Sales ETL & Data Analysis</h4>
+        <p>
+          Built an automated Python ETL pipeline to centralise 120k+ rows of retail data from AWS, APIs, PDF, and CSV files. 
+          Designed a star-schema model and wrote analytical SQL for actionable business insights.
+        </p>
+        <p>
           <strong><a href="https://github.com/ZCHAnalytics/aws-python-data-centralisation" target="_blank">
-            Retail Sales ETL & Data Analysis
+            View Project
           </a></strong>
-          <ul>
-            <li>OOP Python scripts to extract & transform 120k+ rows from AWS, APIs, JSON, PDF, and CSV.</li>
-            <li>Built star-schema model and wrote analytical SQL for actionable business insights.</li>
-          </ul>
-        </li>
-      </ul>
+        </p>
+      </div>
 
-      <h3>Platform Engineering & Kubernetes</h3>
-      <ul>
-        <li>
+      <div class="ubds-callout">
+        <h4>Kubernetes Resume Challenge (Windows + PowerShell)</h4>
+        <p>
+          Reworked a Linux K8s resume deployment to Windows-based infrastructure. 
+          Used Terraform, Helm and PowerShell to provision an autoscaling cluster with persistent storage and CI/CD pipelines.
+        </p>
+        <p>
           <strong><a href="https://github.com/ZCHAnalytics/kubernetes-resume-challenge" target="_blank">
-            Kubernetes Resume Challenge (Windows + PowerShell)
+            View Project
           </a></strong>
-          <ul>
-            <li>Adapted a Linux-based K8s challenge to Windows using PowerShell, Helm, and Terraform.</li>
-            <li>Created autoscaling cluster, CI/CD pipeline, persistent DB storage, and secure secrets handling.</li>
-          </ul>
-        </li>
-      </ul>
+        </p>
+      </div>
+
     </section>
+
 
     <section id="education" class="resume-section">
       <h2>Education</h2>

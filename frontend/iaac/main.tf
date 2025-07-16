@@ -1,4 +1,5 @@
 terraform {
+  backend "azurerm" {}
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -6,14 +7,6 @@ terraform {
     }
   }
   required_version = ">= 1.0"
-}
-terraform {
-  backend "azurerm" {
-    resource_group_name  = "tfstate-rg"
-    storage_account_name = "zchtfstatestorageacc"
-    container_name       = "tfstate"
-    key                  = "frontend.tfstate"
-  }
 }
 
 provider "azurerm" {
@@ -47,7 +40,7 @@ resource "azurerm_storage_account_static_website" "resume" {
 
 # CDN Profile
 resource "azurerm_cdn_profile" "resume_cdn" {
-  name                = "resume-cdn-profile"
+  name                = "ubds-cdn-profile"
   location            = "Global"
   resource_group_name = azurerm_resource_group.resume_rg.name
   sku                 = "Standard_Microsoft"
@@ -61,7 +54,7 @@ resource "azurerm_cdn_endpoint" "resume_endpoint" {
   resource_group_name = azurerm_resource_group.resume_rg.name
 
   origin {
-    name      = "resume-origin"
+    name      = "ubds-resume-origin"
     host_name = azurerm_storage_account.resume_storage.primary_web_host
   }
 

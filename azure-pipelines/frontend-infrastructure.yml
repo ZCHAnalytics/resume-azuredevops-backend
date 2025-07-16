@@ -1,118 +1,347 @@
-name: Frontend Infrastructure
+# ========================
+# ✅ PIPELINE: Deploy Frontenhd Backend Infrastructure with Terraform
+# ========================
 
-on:
+# 🎯 Trigger pipeline on changes to main branch and specific files
+
+
+name: frontend-infrastructure
+
+trigger:
   push:
-    branches: [ main ]
+    branches: 
+      include: 
+        - main
+
     paths:
-      - 'iaac/**'                               # Trigger only when infra files change
-      - '.github/workflows/infrastructure.yml'
-  workflow_dispatch:                          # Allow manual triggering from GitHub UI
+      include: 
+        - 'frontend/iaac/**'                               # Trigger only when infra files change
+        - 'azure-pipelines/frontend-infrastructure.yml'
 
-jobs:
-  plan-frontend-infra:
-    name: Plan Frontend Infrastructure
-    runs-on: ubuntu-latest
+# 🏗️ Agent Pool
+pool:
+  name: 'Default'
 
-    defaults:
-      run:
-        working-directory: iaac
+# 🔧 Variables for directory paths and remote backend state configuration
+variables:
+  terraformWorkingDir: 'frontend/iaac'
+  backendWorkingDir: 'frontend'
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3           # Pulls repo code into runner
+  # Backend state storage
+  tfstateResourceGroup: 'tfstate-ubds-rg'
+  tfstateStorageAccount: 'tfstateubds7270'
+  tfstateContainer: 'tfstateubds'
+  tfstateKey: 'frontend.tfstate'
 
-      - name: List files in iaac folder # Skip in Production 
-        run: ls -la
+# ========================
+# 🔹 STAGE: Terraform Plan
+# ========================
+stages:
+  - stage: PlanFrontendInfra
+    displayName: 'Plan Frontend Infrastructure'
+    jobs:
+      - job: TerraformPlan
+        displayName: 'Terraform Plan'
+        pool:
+          name: 'Default'
+        steps: 
+          - checkout: self
+
+          # 🔍 Verify Terraform Configuration
+          - task: PowerShell@2
+            displayName: '🔍 Verify Terraform Backend Configuration'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "=== VERIFYING TERRAFORM CONFIGURATION ==="
+                
+                # Check for main.tf
+                $mainTfPath = Join-Path '$(terraformWorkingDir)' 'main.tf'
+                if (Test-Path $mainTfPath) {
+                    Write-Host "Found main.tf"
+                    $content = Get-Content $mainTfPath -Raw
+                    if ($content -match 'backend\s+"azurerm"') {
+                        Write-Host "Backend block found in main.tf"
+                        Write-Host "Backend configuration:"
+                        $content | Select-String -Pattern 'backend\s+"azurerm"\s*{[^}]*}' -AllMatches | ForEach-Object {
+                            Write-Host $_.Matches[0].Value
+                        }
+                    } else {
+                        Write-Error "No backend block found in main.tf!"
+                        exit 1
+                    }
+                } else {
+                    Write-Error "main.tf not found!"
+                    exit 1
+                }
+                
+                # Clean up any existing local state
+                Write-Host ""
+                Write-Host "Cleaning up any existing local state files..."
+                $stateFiles = @('terraform.tfstate', 'terraform.tfstate.backup', '.terraform.lock.hcl')
+                foreach ($file in $stateFiles) {
+                    $filePath = Join-Path '$(terraformWorkingDir)' $file
+                    if (Test-Path $filePath) {
+                        Remove-Item $filePath -Force
+                        Write-Host "   Removed: $file"
+                    }
+                }
+                
+                # Remove .terraform directory
+                $terraformDir = Join-Path '$(terraformWorkingDir)' '.terraform'
+                if (Test-Path $terraformDir) {
+                    Remove-Item $terraformDir -Recurse -Force
+                    Write-Host "   Removed: .terraform directory"
+                }
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+          # 🔍 Verify Backend Storage Exists
+          - task: AzureCLI@2
+            displayName: '🔍 Verify Backend Storage Account'
+            inputs:
+              azureSubscription: 'ubds-sp-connection'
+              scriptType: 'ps'
+              scriptLocation: inlineScript
+              inlineScript: |
+                Write-Host "=== VERIFYING BACKEND STORAGE ==="
+                
+                # Method 1: Use cmd to run the command and capture output
+                $storageCheckCmd = "az storage account show --name $(tfstateStorageAccount) --resource-group $(tfstateResourceGroup) --query name -o tsv 2>nul"
+                $storageExists = cmd /c $storageCheckCmd
+                
+                if ($storageExists -eq "$(tfstateStorageAccount)") {
+                    Write-Host "Storage account '$(tfstateStorageAccount)' exists"
+                    
+                    # Check container
+                    $containerCheckCmd = "az storage container exists --account-name $(tfstateStorageAccount) --name $(tfstateContainer) --auth-mode login --query exists -o tsv 2>nul"
+                    $containerExists = cmd /c $containerCheckCmd
+                    
+                    if ($containerExists -eq "true") {
+                        Write-Host "Container '$(tfstateContainer)' exists"
+                    } else {
+                        Write-Host "Container '$(tfstateContainer)' does not exist!"
+                        Write-Host "Creating container..."
+                        cmd /c "az storage container create --name $(tfstateContainer) --account-name $(tfstateStorageAccount) --auth-mode login 2>nul"
+                        Write-Host "Container created"
+                    }
+                } else {
+                    Write-Error "❌ Storage account '$(tfstateStorageAccount)' does not exist!"
+                    exit 1
+                }
+          # 🔧 Terraform Init with detailed logging
+          - task: TerraformTaskV4@4
+            displayName: '🚀 Terraform Init with Remote Backend'
+            inputs: 
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'ubds-sp-connection'
+              backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
+              backendAzureRmStorageAccountName: '$(tfstateStorageAccount)'
+              backendAzureRmContainerName: '$(tfstateContainer)'
+              backendAzureRmKey: '$(tfstateKey)'
+              environmentServiceNameAzureRM: 'ubds-sp-connection'
+              workingDirectory: '$(terraformWorkingDir)'
+              commandOptions: '-reconfigure'  # Force reconfigure to ensure backend is used
+
+          # ✅ Verify init with better diagnostics
+          - task: PowerShell@2
+            displayName: '✅ Verify Terraform Initialisation'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "=== VERIFYING TERRAFORM INITIALISATION ==="
+                
+                Write-Host "Current directory: $(Get-Location)"
+                Write-Host "Terraform working directory: $(terraformWorkingDir)"
+                
+                # List contents of terraform directory
+                Write-Host ""
+                Write-Host "Contents of $(terraformWorkingDir):"
+                Get-ChildItem -Path '$(terraformWorkingDir)' -Force | Format-Table Name, Mode, LastWriteTime
+                
+                # Check if .terraform directory exists
+                $terraformDir = Join-Path '$(terraformWorkingDir)' '.terraform'
+                if (Test-Path $terraformDir) {
+                    Write-Host ""
+                    Write-Host ".terraform directory created successfully"
+                    
+                    # Show what's inside .terraform
+                    Write-Host ""
+                    Write-Host "Contents of .terraform directory:"
+                    Get-ChildItem -Path $terraformDir -Force | Format-Table Name, Mode
+                    
+                    # Check for local state file
+                    $localState = Join-Path '$(terraformWorkingDir)' 'terraform.tfstate'
+                    if (Test-Path $localState) {
+                        Write-Error "Local terraform.tfstate found - backend not configured correctly!"
+                        exit 1
+                    } else {
+                        Write-Host "No local state file - using remote backend"
+                    }
+                    
+                    # Try to show terraform version and providers
+                    cd $(terraformWorkingDir)
+                    Write-Host ""
+                    Write-Host "Terraform version:"
+                    terraform version
+                    
+                    Write-Host ""
+                    Write-Host "Current workspace:"
+                    terraform workspace show
+                    
+                } else {
+                    Write-Error "Terraform init failed - .terraform directory not found!"
+                    Write-Host ""
+                    Write-Host "This usually means the 'terraform init' command failed."
+                    Write-Host "Check the previous task log for errors."
+                    exit 1
+                }
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+
+          # 📄 Terraform Plan
+          - task: TerraformTaskV4@4
+            displayName: '📋 Terraform Plan'
+            inputs: 
+              provider: 'azurerm'
+              command: 'plan'
+              environmentServiceNameAzureRM: 'ubds-sp-connection'
+              workingDirectory: '$(terraformWorkingDir)'
+              commandOptions: '-out=plan.tfplan -detailed-exitcode'
+
+          # ⬆️ Publish plan file as pipeline artifact
+          - task: PublishPipelineArtifact@1
+            displayName: '📤 Publish Terraform Plan'
+            inputs: 
+              targetPath: '$(terraformWorkingDir)/plan.tfplan'
+              artifactName: 'terraform-plan'
+
+
+# ========================
+# 🔸 STAGE: Terraform Apply
+# ========================
+  - stage: ApplyFrontendInfra
+    displayName: 'Apply Frontend Infrastructure'
+    dependsOn: PlanFrontendInfra
+    condition: succeeded()
+    jobs:
+      - job: TerraformApply
+        displayName: 'Terraform Apply'
+        pool:
+          name: 'Default'
+        steps: 
+        - checkout: self
+
+        # ⬇️ Download previously saved plan    
+        - task: DownloadPipelineArtifact@2
+          displayName: '📥 Download Terraform Plan'
+          inputs:
+            artifactName: 'terraform-plan'
+            targetPath: '$(terraformWorkingDir)'
         
-      - name: Mask GitHub Token
-        run: echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"  # Hide GitHub token in logs
+        # 🔧 Re-init Terraform before apply
+        - task: TerraformTaskV4@4
+          displayName: '🔄 Terraform Re-Init for Apply'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'ubds-sp-connection'
+            backendAzureRmResourceGroupName: '$(tfstateResourceGroup)'
+            backendAzureRmStorageAccountName: '$(tfstateStorageAccount)'
+            backendAzureRmContainerName: '$(tfstateContainer)'
+            backendAzureRmKey: '$(tfstateKey)'
+            environmentServiceNameAzureRM: 'ubds-sp-connection'
+            workingDirectory: '$(terraformWorkingDir)'
 
-      - name: Mask Azure Subscription ID
-        run: echo "::add-mask::${{ secrets.AZURE_SUBSCRIPTION_ID }}"  # Hide sub ID in logs
-        
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        # 🚀 Apply the planned Terraform changes
+        - task: TerraformTaskV4@4
+          displayName: '🚀 Terraform Apply'
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            environmentServiceNameAzureRM: 'ubds-sp-connection'
+            workingDirectory: '$(terraformWorkingDir)'
+            commandOptions: 'plan.tfplan'
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2       # Installs Terraform CLI
+        # ✅ Verify remote state was created
+        - task: AzureCLI@2
+          displayName: '✅ Verify Remote State File Created'
+          inputs:
+            azureSubscription: 'ubds-sp-connection'
+            scriptType: 'ps'
+            scriptLocation: inlineScript
+            inlineScript: |
+              Write-Host "=== VERIFYING REMOTE STATE FILE ==="
+              
+              # Check if state file exists in blob storage
+              $stateExists = az storage blob exists `
+                  --account-name $(tfstateStorageAccount) `
+                  --container-name $(tfstateContainer) `
+                  --name $(tfstateKey) `
+                  --auth-mode login `
+                  --query "exists" -o tsv
+              
+              if ($stateExists -eq "true") {
+                  Write-Host "Remote state file '$(tfstateKey)' successfully created!"
+                  
+                  # Get state file details
+                  $blobDetails = az storage blob show `
+                      --account-name $(tfstateStorageAccount) `
+                      --container-name $(tfstateContainer) `
+                      --name $(tfstateKey) `
+                      --auth-mode login `
+                      --query "{size:properties.contentLength, lastModified:properties.lastModified}" -o json | ConvertFrom-Json
+                  
+                  Write-Host "State file details:"
+                  Write-Host "   Size: $($blobDetails.size) bytes"
+                  Write-Host "   Last Modified: $($blobDetails.lastModified)"
+              } else {
+                  Write-Error "Remote state file was not created!"
+                  exit 1
+              }
+              
+              # Verify Terraform can read the state
+              Write-Host ""
+              Write-Host "Verifying Terraform can read remote state:"
+              cd $(terraformWorkingDir)
+              terraform state list
+              
+              $stateItems = terraform state list
+              if ($stateItems) {
+                  Write-Host "Terraform successfully connected to remote state"
+                  Write-Host "Resources in state:"
+                  $stateItems | ForEach-Object { Write-Host "   - $_" }
+              } else {
+                  Write-Warning "No resources found in state (this is OK for first run)"
+              }
 
-      - name: Terraform Init (with backend config)   # Prepares Terraform backend
-        run: |
-          terraform init \
-            -backend-config="resource_group_name=tfstate-rg" \
-            -backend-config="storage_account_name=zchtfstatestorageacc" \
-            -backend-config="container_name=tfstate" \
-            -backend-config="key=frontend.tfstate"
-
-      - name: Prepare log file
-        run: touch terraform.log
-
-      - name: Terraform Plan
-        working-directory: iaac 
-
-        #env: Uncomment for debug
-        #  TF_LOG: DEBUG
-        #  TF_LOG_PATH: terraform.log
-        run: terraform plan -var-file="terraform.tfvars" -out=plan.tfplan
-
-      #- name: Show Terraform debug log
-      #  run: cat terraform.log
-
-      #- name: List Terraform plan file if exists
-      #  run: ls -la plan.tfplan || echo "plan.tfplan does not exist"
-
-      - name: Upload Terraform Plan      # Saves the plan for the apply stage
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan
-          path: iaac/plan.tfplan
-
-  apply-frontend-infra:
-    name: Apply Frontend Infrastructure
-    runs-on: ubuntu-latest
-    needs: plan-frontend-infra      # Waits for planning job
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Mask Azure Subscription ID
-        run: echo "::add-mask::${{ secrets.AZURE_SUBSCRIPTION_ID }}"  # Hide sub ID
-
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}    # Auth to Azure with SP
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2      #   Ensure Terraform is available
+        # 🧾 Extract outputs and create summary
+        - task: PowerShell@2
+          displayName: '📊 Create Frontend Deployment Summary'
+          inputs:
+            targetType: 'inline'
+            script: |
+              Write-Host "=== DEPLOYMENT SUMMARY ==="
+              
+              # Create summary file
+              $summary = @"
+              # Backend Infrastructure Deployment Summary
+              
+              ✅ **Deployment Status**: Success
+              🗓️ **Date**: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+              
+              ## Remote State Configuration
+              - **Storage Account**: $(tfstateStorageAccount)
+              - **Container**: $(tfstateContainer)
+              - **State File**: $(tfstateKey)
+              
+              ## Infrastructure Outputs
+              "@
+              
+              $summary | Out-File -FilePath "$(System.DefaultWorkingDirectory)\summary.md" -Encoding utf8
+              
+              # Get Terraform outputs
+              cd $(terraformWorkingDir)
+              $outputs = terraform output -json | ConvertFrom-Json
+              
       
-      - name: Download Terraform Plan
-        uses: actions/download-artifact@v4   # Retrieve saved plan file
-        with:
-          name: terraform-plan
-          path: iaac
-
-
-      - name: Terraform Init (with backend config)   # Needed again in apply stage
-        working-directory: iaac
-        run: |
-          terraform init \
-            -backend-config="resource_group_name=tfstate-rg" \
-            -backend-config="storage_account_name=zchtfstatestorageacc" \
-            -backend-config="container_name=tfstate" \
-            -backend-config="key=frontend.tfstate"
-
-      - name: Terraform Apply
-        working-directory: iaac
-        run: terraform apply -no-color -auto-approve plan.tfplan
-        # -no-color keeps logs clean
-        # -auto-approve skips confirmation prompts
-
-      - name: Output Details
-        working-directory: iaac
-        run: |
-          echo "### Frontend Infrastructure Deployed! 🚀" >> $GITHUB_STEP_SUMMARY
-          echo "- **Frontend URL**: $(terraform output -raw static_website_url)" >> $GITHUB_STEP_SUMMARY
