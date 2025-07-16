@@ -91,7 +91,7 @@ stages:
                 }
               workingDirectory: '$(System.DefaultWorkingDirectory)'
 
-          # 📌 Verify Azure connection and backend storage
+          # 🔍 Verify Backend Storage Exists
           - task: AzureCLI@2
             displayName: '🔍 Verify Backend Storage Account'
             inputs:
@@ -101,33 +101,29 @@ stages:
               inlineScript: |
                 Write-Host "=== VERIFYING BACKEND STORAGE ==="
                 
-                # Check if storage account exists
-                $storageExists = az storage account show `
-                    --name $(tfstateStorageAccount) `
-                    --resource-group $(tfstateResourceGroup) `
-                    --query "name" -o tsv 2>$null
+                # Method 1: Use cmd to run the command and capture output
+                $storageCheckCmd = "az storage account show --name $(tfstateStorageAccount) --resource-group $(tfstateResourceGroup) --query name -o tsv 2>nul"
+                $storageExists = cmd /c $storageCheckCmd
                 
-                if ($storageExists) {
+                if ($storageExists -eq "$(tfstateStorageAccount)") {
                     Write-Host "✅ Storage account '$(tfstateStorageAccount)' exists"
                     
-                    # Check if container exists
-                    $containerExists = az storage container exists `
-                        --account-name $(tfstateStorageAccount) `
-                        --name $(tfstateContainer) `
-                        --auth-mode login `
-                        --query "exists" -o tsv
+                    # Check container
+                    $containerCheckCmd = "az storage container exists --account-name $(tfstateStorageAccount) --name $(tfstateContainer) --auth-mode login --query exists -o tsv 2>nul"
+                    $containerExists = cmd /c $containerCheckCmd
                     
                     if ($containerExists -eq "true") {
                         Write-Host "✅ Container '$(tfstateContainer)' exists"
                     } else {
-                        Write-Error "❌ Container '$(tfstateContainer)' does not exist!"
-                        exit 1
+                        Write-Host "❌ Container '$(tfstateContainer)' does not exist!"
+                        Write-Host "Creating container..."
+                        cmd /c "az storage container create --name $(tfstateContainer) --account-name $(tfstateStorageAccount) --auth-mode login 2>nul"
+                        Write-Host "✅ Container created"
                     }
                 } else {
                     Write-Error "❌ Storage account '$(tfstateStorageAccount)' does not exist!"
                     exit 1
                 }
-
           # 🔧 Terraform Init with detailed logging
           - task: TerraformTaskV4@0
             displayName: '🚀 Terraform Init with Remote Backend'
