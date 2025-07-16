@@ -220,16 +220,27 @@ jobs:
               $account = "$(resolvedStorageAccount)"
               Write-Host "Uploading files to storage account: $account"
               
-              az storage blob upload-batch `
-                --account-name $account `
-                --auth-mode login `
-                --source ./frontend `
-                --destination '$web' `
-                --overwrite
-                --pattern "*.html" `
-                --pattern "*.css" `
-                --pattern "*.js" `
-                --pattern "sbom.json"
+              # List of file extensions to upload
+              $extensions = @("*.html", "*.css", "*.js", "*.json", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.svg", "*.ico")
+              
+              foreach ($ext in $extensions) {
+                Write-Host "Uploading files with pattern: $ext"
+                
+                # Check if files exist before uploading
+                $files = Get-ChildItem -Path ./frontend -Filter $ext -Recurse | 
+                  Where-Object { $_.FullName -notlike "*\iaac\*" }
+                
+                if ($files.Count -gt 0) {
+                  az storage blob upload-batch `
+                    --account-name $account `
+                    --auth-mode login `
+                    --source ./frontend `
+                    --destination '$web' `
+                    --pattern $ext `
+                    --overwrite
+                }
+              }
+              
               Write-Host "Upload completed"
 
       # ---- Purge CDN cache-----
