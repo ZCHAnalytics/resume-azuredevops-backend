@@ -152,6 +152,7 @@ jobs:
                 Write-Error "Storage account $account not found"
                 exit 1
               }
+
             } catch {
               Write-Error "Failed to verify storage account: $_"
               exit 1
@@ -167,7 +168,8 @@ jobs:
             } catch {
               Write-Error "Failed to get static website status: $_"
               exit 1
-
+            }
+            
             Write-Host "Static website is enabled on $account"
             Write-Host "##[endgroup]"
 
