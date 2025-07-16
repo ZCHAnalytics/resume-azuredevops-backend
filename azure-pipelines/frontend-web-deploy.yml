@@ -74,24 +74,26 @@ jobs:
               Write-Error "sbom.json NOT found at expected path."
             }
 
-            Write-Output "Listing files in frontend folder:"
-            Get-ChildItem "$(Build.SourcesDirectory)\frontend"
-
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
         inputs:
           PathtoPublish: '$(Build.SourcesDirectory)\frontend\sbom.json'
           ArtifactName: 'sbom-frontend'
+
+      - task: PowerShell@2
+        displayName: List files in frontend folder after publishing
+        inputs:
+          targetType: inline
           script: |
             Write-Output "Listing files in frontend folder:"
             Get-ChildItem "$(Build.SourcesDirectory)\frontend"
 
-      - task: PowerShell@2
-        displayName: Check Grype Version # preinstalled on local agent 
-        inputs:
-          targetType: inline
-          script: |
-            grype version
+      # - task: PowerShell@2
+      #   displayName: Check Grype Version # preinstalled on local agent 
+      #   inputs:
+      #     targetType: inline
+      #     script: |
+      #       grype version
             
       - task: PowerShell@2
         displayName: Run Grype Vulnerability Scan
