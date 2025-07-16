@@ -1,22 +1,53 @@
-# Azure Cloud Resume Challenge — Backend API
+# Azure DevOps Cloud Resume Challenge
 
-This repository contains the backend API for the Cloud Resume Challenge, implemented as an Azure Function app with Cosmos DB to provide a dynamic visitor counter.
+This repository contains both backend and frontend code that adapts the traditional [Cloud Resume Challenge](https://cloudresumechallenge.dev/) for **Azure DevOps**. It replaces GitHub Actions with Azure Pipelines and runs CI/CD using a local Windows agent with PowerShell scripting.
 
 ## Overview
 
-This backend service powers the unique visitor counter on the frontend resume site and exposes API endpoints for visitor tracking.
-
-### Challenge Steps Completed & Enhancements
-- AzureDevops
-- Built using **Python Azure Functions** with Cosmos DB for persistent, scalable data storage.
-- Fully automated infrastructure deployment via **Terraform**, managed through GitHub Actions.
-- Implemented **CI/CD pipelines** that:
-  - Deploy infrastructure (IaC) changes from `iaac/` directory.
-  - Deploy backend function app only after successful infrastructure provisioning.
-- Added **Software Bill of Materials (SBOM)** generation with Syft and vulnerability scanning using Grype to improve supply chain security.
-- Modular workflows using smart triggers to deploy only when necessary.
-- Ensured **workflow security** and permissions are locked down in GitHub Actions.
+The backend service powers a **visitor counter API** exposed via Azure Functions and tracks visits to the frontend résumé site. Frontend files are deployed to a static website hosted in Azure Storage and delivered securely via Azure CDN.
 
 ---
 
+##  Challenge Steps Completed & Enhancements
 
+### ☁️ Infrastructure & Deployment
+
+-  Fully automated **Infrastructure as Code (IaC)** using **Terraform**
+-  Deployed using **Azure DevOps Pipelines**
+-  Remote state stored securely in Azure Storage
+-  CDN-enabled static website (HTTPS enforced via Azure CDN)
+
+### 🛠 Backend (API)
+
+-  Built using **Python Azure Functions**
+-  Visitor data stored in **Azure Cosmos DB** (Table API)
+-  Azure Function triggered via HTTP with CORS & security headers
+
+### 🔄 CI/CD Process
+
+-  Terraform runs triggered by changes in the `iaac/` directory
+-  Azure Function deployed only after infrastructure is provisioned successfully
+-  End-to-end tests executed using **Cypress** before final deployment
+-  All Bash commands rewritten in **PowerShell** for Windows compatibility
+
+###  Security & Compliance
+
+-  **SBOM (Software Bill of Materials)** generated using [Syft](https://github.com/anchore/syft)
+-  Vulnerability scanning with [Grype](https://github.com/anchore/grype)
+-  Azure Service Principal configured with minimal RBAC permissions
+-  Secrets stored securely in Azure DevOps Pipelines Library
+
+---
+
+##  Testing
+
+- **Cypress** is used for end-to-end testing after successful backend deployment
+- Tests verify the CDN-delivered site and API integration
+
+---
+
+##  Notes
+
+- Commits are signed and saved using `gpentry`. This is **optional** but a good DevSecOps practice as it enables [GPG signing](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits) and ensures trust and provenance of your commits.
+
+---
