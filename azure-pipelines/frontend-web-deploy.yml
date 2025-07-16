@@ -5,8 +5,18 @@
 
 name: deploy-frontend-files
 
-trigger: none 
+# Git trigger on specific paths and branch
+trigger: 
+  branches: 
+    include:
+      - main 
+  
+  paths:
+    include:
+      - 'frontend/iaac/**'                             # Trigger only when web files change
+      - 'azure-pipelines/frontend-web-deploy.yml'   
 
+# Pipeline trigger when the other pipeline completes on main branch
 resources: 
   pipelines:
     - pipeline: fronendInfra
@@ -15,11 +25,6 @@ resources:
         branches:
           include: 
             - main
-  
-  # paths:
-  #   include:
-  #     - 'frontend/iaac/**'                             # Trigger only when web files change
-  #     - 'azure-pipelines/frontend-web-deploy.yml'   
 
 # use local agent on windows
 pool:
