@@ -168,8 +168,6 @@ jobs:
 
             
       # TROUBLESHOOTING FIX #4: Added verification steps
-      # These steps ensure the storage account exists and has static website enabled
-      # before attempting to upload files, providing better error messages
 
       - task: PowerShell@2
         displayName: Verify Storage Account
