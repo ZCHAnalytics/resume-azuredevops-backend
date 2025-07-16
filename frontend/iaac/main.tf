@@ -17,12 +17,6 @@ provider "azurerm" {
   }
 }
 
-# Create the resource group
-resource "azurerm_resource_group" "resume_rg" {
-  name     = var.resource_group_name
-  location = var.location
-}
-
 # Storage Account for Static Website
 resource "azurerm_storage_account" "resume_storage" {
   name                     = var.storage_account_name

@@ -1,5 +1,5 @@
 # ========================
-# ✅ PIPELINE: Deploy Frontenhd Backend Infrastructure with Terraform
+# ✅ PIPELINE: Deploy Frontend Infrastructure with Terraform
 # ========================
 
 # 🎯 Trigger pipeline on changes to main branch and specific files

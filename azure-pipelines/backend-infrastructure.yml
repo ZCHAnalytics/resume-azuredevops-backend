@@ -139,13 +139,13 @@ stages:
               workingDirectory: '$(terraformWorkingDir)'
               commandOptions: '-reconfigure'  # Force reconfigure to ensure backend is used
 
-          # ✅ Verify initialization with better diagnostics
+          # ✅ Verify init with better diagnostics
           - task: PowerShell@2
-            displayName: '✅ Verify Terraform Initialization'
+            displayName: '✅ Verify Terraform Initialisation'
             inputs:
               targetType: 'inline'
               script: |
-                Write-Host "=== VERIFYING TERRAFORM INITIALIZATION ==="
+                Write-Host "=== VERIFYING TERRAFORM INITIALISATION ==="
                 
                 Write-Host "Current directory: $(Get-Location)"
                 Write-Host "Terraform working directory: $(terraformWorkingDir)"
@@ -186,7 +186,7 @@ stages:
                     terraform workspace show
                     
                 } else {
-                    Write-Error "Terraform initialization failed - .terraform directory not found!"
+                    Write-Error "Terraform initialisation failed - .terraform directory not found!"
                     Write-Host ""
                     Write-Host "This usually means the 'terraform init' command failed."
                     Write-Host "Check the previous task log for errors."
