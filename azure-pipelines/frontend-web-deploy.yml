@@ -91,7 +91,11 @@ jobs:
             Write-Host "###[group]Terraform Init"
 
             cd frontend/iaac
-            
+            Write-Host "Terraform location:"
+            Get-Command terraform | Format-List
+
+            terraform version
+
             terraform init `
               -reconfigure `
               "-backend-config=resource_group_name=$(tfstateResourceGroup)" `
