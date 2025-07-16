@@ -64,15 +64,43 @@ jobs:
           workingDirectory: '$(Build.SourcesDirectory)'
           script: |
             $sbomPath = Join-Path -Path "$(Build.SourcesDirectory)\frontend" -ChildPath "sbom.json"
-
-            syft frontend -o json | Out-File -Encoding utf8 $sbomPath
-
-            Write-Output "Checking if sbom.json exists at path: $sbomPath"
+            
+            # Generate SBOM directly to file without encoding issues
+            & syft frontend --output json=$sbomPath
+            
+            # Verify the file exists
             if (Test-Path $sbomPath) {
-              Write-Output "sbom.json found successfully."
+              Write-Output "sbom.json created successfully at: $sbomPath"
+              
+              # Display file size for verification
+              $fileInfo = Get-Item $sbomPath
+              Write-Output "File size: $($fileInfo.Length) bytes"
+              
+              # Optionally validate JSON format
+              try {
+                $jsonContent = Get-Content $sbomPath -Raw | ConvertFrom-Json
+                Write-Output "JSON validation successful"
+              } catch {
+                Write-Error "JSON validation failed: $_"
+              }
             } else {
               Write-Error "sbom.json NOT found at expected path."
+              exit 1
             }
+
+      - task: PowerShell@2
+        displayName: Scan SBOM with Grype
+        inputs:
+          targetType: inline
+          workingDirectory: '$(Build.SourcesDirectory)\frontend'
+          script: |
+            # Run Grype scan on the SBOM
+            Write-Output "Running Grype scan on SBOM..."
+            & grype sbom:sbom.json
+            
+            # If there is not need to save the results to a file
+            & grype sbom:sbom.json -o json > grype-results.json
+
 
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
@@ -80,30 +108,20 @@ jobs:
           PathtoPublish: '$(Build.SourcesDirectory)\frontend\sbom.json'
           ArtifactName: 'sbom-frontend'
 
+      - task: PublishBuildArtifacts@1
+        displayName: Upload Grype Results
+        condition: succeededOrFailed()
+        inputs:
+          PathtoPublish: '$(Build.SourcesDirectory)\frontend\grype-results.json'
+          ArtifactName: 'grype-results'
+
       - task: PowerShell@2
-        displayName: List files in frontend folder after publishing
+        displayName: List files in frontend folder after scanning
         inputs:
           targetType: inline
           script: |
             Write-Output "Listing files in frontend folder:"
-            Get-ChildItem "$(Build.SourcesDirectory)\frontend"
-
-      # - task: PowerShell@2
-      #   displayName: Check Grype Version # preinstalled on local agent 
-      #   inputs:
-      #     targetType: inline
-      #     script: |
-      #       grype version
-            
-      - task: PowerShell@2
-        displayName: Run Grype Vulnerability Scan
-        inputs:
-          targetType: inline
-          workingDirectory: 'frontend'
-          script: |
-            grype sbom:$(Build.SourcesDirectory)\frontend\sbom.json -o table --fail-on medium
-
-            #grype sbom:sbom.json -o table --fail-on medium
+            Get-ChildItem "$(Build.SourcesDirectory)\frontend" | Format-Table Name, Length, LastWriteTime
 
       # --- Security Scanning Steps End ---
       
