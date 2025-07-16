@@ -5,16 +5,16 @@
 
 name: deploy-frontend-files
 
-# Git trigger on specific paths and branch
-trigger: 
-  branches: 
-    include:
-      - main 
+# # Git trigger on specific paths and branch
+# trigger: 
+#   branches: 
+#     include:
+#       - main 
   
-  paths:
-    include:
-      - 'frontend/iaac/**'                             # Trigger only when web files change
-      - 'azure-pipelines/frontend-web-deploy.yml'   
+#   paths:
+#     include:
+#       - 'frontend/iaac/**'                             # Trigger only when web files change
+#       - 'azure-pipelines/frontend-web-deploy.yml'   
 
 # use local agent on windows
 pool:
@@ -216,8 +216,6 @@ jobs:
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
-            
-              
               $account = "$(resolvedStorageAccount)"
               Write-Host "Uploading files to storage account: $account"
               
@@ -227,7 +225,6 @@ jobs:
                 --source ./frontend `
                 --destination '$web' `
                 --overwrite
-              
 
               Write-Host "Upload completed"
 

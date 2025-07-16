@@ -21,7 +21,6 @@ data "azurerm_resource_group" "resume_rg" {
   name = var.resource_group_name
 }
 
-
 # Storage Account for Static Website
 resource "azurerm_storage_account" "resume_storage" {
   name                     = var.storage_account_name
@@ -39,11 +38,12 @@ resource "azurerm_storage_account_static_website" "resume" {
 
 # CDN Profile
 resource "azurerm_cdn_profile" "resume_cdn" {
-  name                = "ubds-cdn-profile"
+  name                = var.cdn_profile_name
   location            = "Global"
   resource_group_name = data.azurerm_resource_group.resume_rg.name
   sku                 = "Standard_Microsoft"
 }
+
 
 # CDN Endpoint
 resource "azurerm_cdn_endpoint" "resume_endpoint" {

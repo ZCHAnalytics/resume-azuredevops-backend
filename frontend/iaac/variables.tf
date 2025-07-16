@@ -22,3 +22,8 @@ variable "frontend_origin_urls" {
   type        = list(string)
   description = "List of allowed frontend origins for CORS"
 }
+
+variable "cdn_profile_name" {
+  type = string
+  description = "CDN profile name" 
+}

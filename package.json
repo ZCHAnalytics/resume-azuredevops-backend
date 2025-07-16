@@ -1,0 +1,25 @@
+{
+  "name": "cloudresumeprod",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run --headless"
+  },
+  
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZCHAnalytics/cloud-resume-challenge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZCHAnalytics/cloud-resume-challenge/issues"
+  },
+  "homepage": "https://github.com/ZCHAnalytics/cloud-resume-challenge#readme",
+  "description": "",
+  "devDependencies": {
+    "cypress": "^14.5.1"
+  }
+}
