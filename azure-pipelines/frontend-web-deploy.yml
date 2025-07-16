@@ -29,7 +29,6 @@ variables:
   tfstateContainer: 'tfstateubds'
   tfstateKey: 'frontend.tfstate'
 
-
 jobs:
   - job: deploy_web_files
     displayName: Deploy Web Files
@@ -169,7 +168,7 @@ jobs:
               Write-Error "Failed to get static website status: $_"
               exit 1
             }
-            
+
             Write-Host "Static website is enabled on $account"
             Write-Host "##[endgroup]"
 
