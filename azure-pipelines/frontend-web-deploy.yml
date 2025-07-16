@@ -28,7 +28,7 @@ variables:
   tfstateResourceGroup: 'tfstate-ubds-rg'
   tfstateStorageAccount: 'tfstateubds7270'
   tfstateContainer: 'tfstateubds'
-  tfstateKey: 'ubds.tfstate'
+  tfstateKey: 'fronteend.tfstate'
 
 
 jobs:
