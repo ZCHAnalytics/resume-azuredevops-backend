@@ -85,8 +85,15 @@ jobs:
 
             cd frontend/iaac
             
-            terraform init -backend-config="resource_group_name=tfstate-rg" -backend-config="storage_account_name=ubdswebstorage" -backend-config="container_name=tfstate" -backend-config="key=frontend.tfstate" -input=false -no-color
+            # terraform init -backend-config="resource_group_name=tfstate-rg" -backend-config="storage_account_name=ubdswebstorage" -backend-config="container_name=tfstate" -backend-config="key=frontend.tfstate" -input=false -no-color
 
+            terraform init `
+              -backend-config="resource_group_name=tfstate-rg" `
+              -backend-config="storage_account_name=ubdswebstorage" `
+              -backend-config="container_name=tfstate" `
+              -backend-config="key=frontend.tfstate" `
+              -input=false `
+              -no-color
         
             # Get the storage account name from Terraform outputs
             $storage = terraform output -raw storage_account_name 2>$null
