@@ -39,23 +39,23 @@ jobs:
       - checkout: self 
 
       # --- Security Scanning Steps Start ---
-      - task: PowerShell@2
-        displayName: Check Syft Version # Preinstalled on local agent 
-        inputs:
-          targetType: inline
-          script: |
-            syft version
+      # - task: PowerShell@2
+      #   displayName: Check Syft Version # Preinstalled on local agent 
+      #   inputs:
+      #     targetType: inline
+      #     script: |
+      #       syft version
 
-      - task: PowerShell@2
-        displayName: Verify working directory and list files
-        inputs:
-          targetType: inline
-          workingDirectory: 'frontend'
-          script: |
-            Write-Output "Current directory:"
-            pwd
-            Write-Output "Files in directory:"
-            ls
+      # - task: PowerShell@2
+      #   displayName: Verify working directory and list files
+      #   inputs:
+      #     targetType: inline
+      #     workingDirectory: 'frontend'
+      #     script: |
+      #       Write-Output "Current directory:"
+      #       pwd
+      #       Write-Output "Files in directory:"
+      #       ls
 
       - task: PowerShell@2
         displayName: Generate SBOM
@@ -63,12 +63,16 @@ jobs:
           targetType: inline
           workingDirectory: '$(Build.SourcesDirectory)'
           script: |
-            syft .\frontend -o json | Out-File -Encoding utf8 sbom.json
-            if (Test-Path sbom.json) {
-              Write-Output "sbom.json created successfully."
+            syft frontend -o json | Out-File -Encoding utf8 sbom.json
+            Write-Output "Checking if sbom.json exists in frontend folder:"
+            if (Test-Path frontend\sbom.json) {
+              Write-Output "Found sbom.json in frontend folder."
             } else {
-              Write-Error "sbom.json not found after running syft."
+              Write-Output "sbom.json NOT found in frontend folder."
             }
+            
+            Write-Output "Listing files in frontend folder:"
+            Get-ChildItem frontend
 
       - task: PowerShell@2
         displayName: Search for sbom.json in frontend recursively
