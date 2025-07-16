@@ -17,11 +17,16 @@ provider "azurerm" {
   }
 }
 
+data "azurerm_resource_group" "resume_rg" {
+  name = var.resource_group_name
+}
+
+
 # Storage Account for Static Website
 resource "azurerm_storage_account" "resume_storage" {
   name                     = var.storage_account_name
-  resource_group_name      = azurerm_resource_group.resume_rg.name
-  location                 = azurerm_resource_group.resume_rg.location
+  resource_group_name      = data.azurerm_resource_group.resume_rg.name
+  location                 = data.azurerm_resource_group.resume_rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
@@ -36,7 +41,7 @@ resource "azurerm_storage_account_static_website" "resume" {
 resource "azurerm_cdn_profile" "resume_cdn" {
   name                = "ubds-cdn-profile"
   location            = "Global"
-  resource_group_name = azurerm_resource_group.resume_rg.name
+  resource_group_name = data.azurerm_resource_group.resume_rg.name
   sku                 = "Standard_Microsoft"
 }
 
@@ -45,7 +50,7 @@ resource "azurerm_cdn_endpoint" "resume_endpoint" {
   name                = var.cdn_endpoint_name
   profile_name        = azurerm_cdn_profile.resume_cdn.name
   location            = "Global"
-  resource_group_name = azurerm_resource_group.resume_rg.name
+  resource_group_name = data.azurerm_resource_group.resume_rg.name
 
   origin {
     name      = "ubds-resume-origin"
