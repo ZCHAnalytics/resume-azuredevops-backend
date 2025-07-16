@@ -54,7 +54,7 @@ jobs:
           targetType: inline
           workingDirectory: 'frontend'
           script: |
-            syft . -o json > sbom.json
+            syft . -o cyclonedx-json > sbom.json
 
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
