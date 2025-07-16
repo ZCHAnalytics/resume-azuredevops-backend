@@ -41,6 +41,12 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
+            if (Test-Path -Path "package-lock.json") {
+              npm ci
+            } else {
+              npm install
+            }
+
             npm ci
 
       - task: PowerShell@2
