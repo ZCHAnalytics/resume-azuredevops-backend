@@ -95,6 +95,7 @@ jobs:
             Get-Command terraform | Format-List
 
             terraform version
+            
 
             terraform init `
               -reconfigure `
