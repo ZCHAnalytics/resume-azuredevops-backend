@@ -54,7 +54,7 @@ jobs:
           targetType: inline
           workingDirectory: 'frontend'
           script: |
-            ..\syft\syft.exe . -o json > sbom.json
+            syft . -o json > sbom.json
 
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
@@ -75,7 +75,7 @@ jobs:
           targetType: inline
           workingDirectory: 'frontend'
           script: |
-            ..\grype\grype.exe sbom:sbom.json -o table --fail-on medium
+            grype sbom:sbom.json -o table --fail-on medium
 
       # --- Security Scanning Steps End ---
       
