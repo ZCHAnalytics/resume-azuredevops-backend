@@ -115,6 +115,9 @@ jobs:
 
       - task: PowerShell@2
         displayName: Verify Storage Account
+        env:
+          resolvedStorageAccount: $(resolvedStorageAccount)
+
         inputs:
           targetType: inline
           script: |
@@ -134,6 +137,9 @@ jobs:
             }
       - task: PowerShell@2
         displayName: Upload Web Files
+        env:
+          resolvedStorageAccount: $(resolvedStorageAccount)
+
         inputs:
           targetType: inline
           script: |
