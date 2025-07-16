@@ -56,7 +56,6 @@ jobs:
             Write-Output "Files in directory:"
             ls
 
-
       - task: PowerShell@2
         displayName: Generate SBOM
         inputs:
@@ -64,6 +63,17 @@ jobs:
           workingDirectory: 'frontend'
           script: |
             syft . -o json > sbom.json
+
+
+      - task: PowerShell@2
+        displayName: Search for sbom.json in frontend recursively
+        inputs:
+          targetType: inline
+          workingDirectory: 'frontend'
+          script: |
+            Write-Output "Searching for sbom.json in frontend recursively:"
+            Get-ChildItem -Path . -Filter sbom.json -Recurse
+
 
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
