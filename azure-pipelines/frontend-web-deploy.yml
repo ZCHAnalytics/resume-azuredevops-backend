@@ -16,10 +16,10 @@ resources:
           include: 
             - main
   
-  paths:
-    include:
-      - 'frontend/iaac/**'                             # Trigger only when web files change
-      - 'azure-pipelines/frontend-web-deploy.yml'   
+  # paths:
+  #   include:
+  #     - 'frontend/iaac/**'                             # Trigger only when web files change
+  #     - 'azure-pipelines/frontend-web-deploy.yml'   
 
 # use local agent on windows
 pool:
