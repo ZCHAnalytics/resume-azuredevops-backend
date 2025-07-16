@@ -39,14 +39,12 @@ jobs:
       - checkout: self 
 
       # --- Security Scanning Steps Start ---
-
       - task: PowerShell@2
         displayName: Check Syft Version # Preinstalled on local agent 
         inputs:
           targetType: inline
           script: |
             syft version
-
 
       - task: PowerShell@2
         displayName: Generate SBOM
@@ -59,7 +57,7 @@ jobs:
       - task: PublishBuildArtifacts@1
         displayName: Upload SBOM Artifact
         inputs:
-          PathtoPublish: 'frontend\sbom.json'
+          PathtoPublish: 'frontend/sbom.json' # Forward slash for azure pipeline
           ArtifactName: 'sbom-frontend'
 
       - task: PowerShell@2

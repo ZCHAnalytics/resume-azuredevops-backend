@@ -28,7 +28,7 @@ jobs:
         run: |
           for i in {1..10}; do
             echo "Checking if frontend is available (attempt $i)..."
-            if curl -sSf https://shecodesclouds.azureedge.net > /dev/null; then
+            if curl -sSf https://ubds-resume.azureedge.net > /dev/null; then
               echo "Frontend is available!"
               break
             fi
@@ -40,5 +40,5 @@ jobs:
         run: |
           npx cypress install
           npx cypress run \
-            --config baseUrl=https://shecodesclouds.azureedge.net,supportFile=false \
-            --env apiUrl=https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter
+            --config baseUrl=https://ubds-resume.azureedge.net,supportFile=false \
+            --env apiUrl=https://ubds-func-app.azurewebsites.net/api/VisitorCounter
