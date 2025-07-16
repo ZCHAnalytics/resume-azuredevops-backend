@@ -207,6 +207,7 @@ jobs:
             Write-Host "Static website is enabled on $account"
             Write-Host "##[endgroup]"
 
+
       # --- Upload Web Files -----
       - task: AzureCLI@2
         displayName: Upload Web Files
