@@ -16,7 +16,6 @@ trigger:
       - 'frontend/iaac/**'                             # Trigger only when web files change
       - 'azure-pipelines/frontend-web-deploy.yml'   
 
-
 # use local agent on windows
 pool:
   name: 'Default'
@@ -89,13 +88,11 @@ jobs:
             }
 
             Write-Host "###[group]Terraform Init"
-
             cd frontend/iaac
+            
             Write-Host "Terraform location:"
             Get-Command terraform | Format-List
-
             terraform version
-
 
             terraform init `
               -reconfigure `
@@ -110,36 +107,26 @@ jobs:
               Write-Error "Terraform init failed"
               exit 1
             }
+            
+            Write-Host "##[endgroup]"
 
             Write-Host "##[group]DEBUG: List all terraform outputs"
             terraform output
             Write-Host "##[endgroup]"
-            exit $LASTEXITCODE
-
-            Write-Host "##[endgroup]"
-
+            
+            
             Write-Host "##[group]Getting Storage Account Output"
 
             $storage = terraform output -raw storage_account_name 2>&1
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "Terraform output command failed: $storage"
-              exit 1
-            }
-
-            Write-Host "tfstateContainer = $(tfstateContainer)"
-            Write-Host "Running terraform init with backend-config container_name=$(tfstateContainer)"
-
-
-            # Get the storage account name from Terraform outputs
-
-            $storage = terraform output -raw storage_account_name 2>$null
-            if (-not $storage) {
-              Write-Host "Using default storage account: $defaultStorage"
+            if ($LASTEXITCODE -ne 0 -or -not $storage) {
+              Write-Warning "Terraform output failed or missing; falling back to default storage account"
               $storage = $defaultStorage
             }
-            
+            Write-Host "Using resolved storage account: $storage"
             Write-Host "##vso[task.setvariable variable=resolvedStorageAccount]$storage"
+            Write-Host "##[endgroup]"
 
+            # Get the storage account name from Terraform outputs
 
       # TROUBLESHOOTING FIX #4: Added verification steps
       # These steps ensure the storage account exists and has static website enabled
@@ -149,39 +136,46 @@ jobs:
         displayName: Verify Storage Account
         env:
           resolvedStorageAccount: $(resolvedStorageAccount)
-
         inputs:
           targetType: inline
           script: |
+            Write-Host "##[group]Verify Storage Account and Static Website"
+
             $account = "$(resolvedStorageAccount)"
+            Write-Host "Checking existence of storage account: $account"
+
             $exists = az storage account show --name $account --query "name" -o tsv 2>$null
             if (-not $exists) {
               Write-Error "Storage account $account not found"
               exit 1
             }
-            
-          
-            # Check if static website is enabled
+
+            Write-Host "Checking if static website is enabled on $account"
             $staticEnabled = az storage blob service-properties show --account-name $account --query "staticWebsite.enabled" -o tsv 2>$null
             if ($staticEnabled -ne "true") {
               Write-Error "Static website not enabled on $account"
               exit 1
             }
+            Write-Host "Static website is enabled on $account"
+            Write-Host "##[endgroup]"
+
+
       - task: PowerShell@2
         displayName: Upload Web Files
         env:
           resolvedStorageAccount: $(resolvedStorageAccount)
-
         inputs:
           targetType: inline
           script: |
+            Write-Host "##[group]Upload Web Files"
+
             $account = "$(resolvedStorageAccount)"
             if (!(Test-Path "./frontend")) {
               Write-Error "Frontend folder not found"
               exit 1
             }
 
-            Write-Host "Uploading to $account"
+            Write-Host "Uploading files to storage account: $account"
             $success = $false
 
             try {
@@ -193,7 +187,7 @@ jobs:
                 --overwrite
               $success = $true
             } catch {
-              Write-Warning "Login auth failed, trying with key..."
+              Write-Warning "Login auth failed, trying with account key..."
             }
 
             if (-not $success) {
@@ -207,18 +201,26 @@ jobs:
                 --destination '$web' `
                 --overwrite
             }
+            Write-Host "Upload completed"
+            Write-Host "##[endgroup]"
+
 
       - task: PowerShell@2
         displayName: Purge CDN Cache
         inputs:
           targetType: inline
           script: |
+            Write-Host "##[group]Purge CDN Cache"
+
             $cdn = "$(CDN_ENDPOINT_NAME)"
             $profile = "$(CDN_PROFILE_NAME)"
             $rg = "$(RESOURCE_GROUP_NAME)"
 
+            Write-Host "Checking CDN endpoint $cdn in profile $profile and resource group $rg"
             $exists = az cdn endpoint show --resource-group $rg --profile-name $profile --name $cdn --query "name" -o tsv 2>$null
+
             if ($exists) {
+              Write-Host "Purging CDN cache for endpoint $cdn"
               az cdn endpoint purge `
                 --resource-group $rg `
                 --profile-name $profile `
@@ -228,6 +230,8 @@ jobs:
             } else {
               Write-Warning "CDN endpoint not found, skipping purge"
             }
+            Write-Host "##[endgroup]"
+
 
       - task: PowerShell@2
         displayName: Deployment Summary
