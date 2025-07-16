@@ -45,6 +45,7 @@ jobs:
           targetType: inline
           script: |
             syft version
+
       - task: PowerShell@2
         displayName: Verify working directory and list files
         inputs:
@@ -62,7 +63,7 @@ jobs:
           targetType: inline
           workingDirectory: 'frontend'
           script: |
-            syft . -o json | Out-File -Encoding utf8 sbom.json
+            syft frontend -o json | Out-File -Encoding utf8 sbom.json
             if (Test-Path sbom.json) {
               Write-Output "sbom.json created successfully."
             } else {
