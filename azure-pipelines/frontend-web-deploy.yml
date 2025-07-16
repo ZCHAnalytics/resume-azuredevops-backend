@@ -16,15 +16,6 @@ trigger:
       - 'frontend/iaac/**'                             # Trigger only when web files change
       - 'azure-pipelines/frontend-web-deploy.yml'   
 
-# Pipeline trigger when the other pipeline completes on main branch
-resources: 
-  pipelines:
-    - pipeline: fronendInfra
-      source: frontend-infrastructure 
-      trigger: 
-        branches:
-          include: 
-            - main
 
 # use local agent on windows
 pool:
