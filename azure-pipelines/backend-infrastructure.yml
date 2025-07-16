@@ -125,7 +125,7 @@ stages:
                     exit 1
                 }
           # 🔧 Terraform Init with detailed logging
-          - task: TerraformTaskV4@0
+          - task: TerraformTaskV4@4
             displayName: '🚀 Terraform Init with Remote Backend'
             inputs: 
               provider: 'azurerm'
@@ -184,7 +184,7 @@ stages:
               workingDirectory: '$(terraformWorkingDir)'
 
           # 📄 Terraform Plan
-          - task: TerraformTaskV4@0
+          - task: TerraformTaskV4@4
             displayName: '📋 Terraform Plan'
             inputs: 
               provider: 'azurerm'
@@ -223,7 +223,7 @@ stages:
             targetPath: '$(terraformWorkingDir)'
         
         # 🔧 Re-init Terraform before apply
-        - task: TerraformTaskV4@0
+        - task: TerraformTaskV4@4
           displayName: '🔄 Terraform Re-Init for Apply'
           inputs:
             provider: 'azurerm'
@@ -237,7 +237,7 @@ stages:
             workingDirectory: '$(terraformWorkingDir)'
 
         # 🚀 Apply the planned Terraform changes
-        - task: TerraformTaskV4@0
+        - task: TerraformTaskV4@4
           displayName: '🚀 Terraform Apply'
           inputs:
             provider: 'azurerm'
@@ -330,7 +330,7 @@ stages:
               
 
 #           # 📄 Terraform Plan and save output
-#           - task: TerraformTaskV4@0
+#           - task: TerraformTaskV4@4
 #             displayName: 'Terraform Plan'
 #             inputs: 
 #               provider: 'azurerm'
@@ -385,7 +385,7 @@ stages:
 #             targetPath: '$(terraformWorkingDir)'
         
 #         # 🔧 Re-init Terraform before apply (important for remote backend)
-#         - task: TerraformTaskV4@0
+#         - task: TerraformTaskV4@4
 #           displayName: 'Terraform Init'
 #           inputs:
 #             provider: 'azurerm'
@@ -399,7 +399,7 @@ stages:
 #             workingDirectory: '$(terraformWorkingDir)'
 
 #         # 🚀 Apply the planned Terraform changes
-#         - task: TerraformTaskV4@0
+#         - task: TerraformTaskV4@4
 #           displayName: 'Terraform Apply'
 #           inputs:
 #             provider: 'azurerm'
