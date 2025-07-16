@@ -29,9 +29,9 @@ jobs:
     env:
       STORAGE_ACCOUNT_NAME: ubdswebstorage
       CDN_ENDPOINT_NAME: ubds-resume
-      #CDN_PROFILE_NAME: ubds-cdn-profile
+      # CDN_PROFILE_NAME: ubds-cdn-profile
       RESOURCE_GROUP_NAME: ubds-rg
-      #frontend_origin_urls: https://ubds-resume.azureedge.net
+      # frontend_origin_urls: https://ubds-resume.azureedge.net
 
     steps:
       - checkout: self 
