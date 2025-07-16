@@ -45,6 +45,17 @@ jobs:
           targetType: inline
           script: |
             syft version
+      - task: PowerShell@2
+        displayName: Verify working directory and list files
+        inputs:
+          targetType: inline
+          workingDirectory: 'frontend'
+          script: |
+            Write-Output "Current directory:"
+            pwd
+            Write-Output "Files in directory:"
+            ls
+
 
       - task: PowerShell@2
         displayName: Generate SBOM
