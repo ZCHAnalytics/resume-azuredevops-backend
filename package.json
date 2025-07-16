@@ -9,15 +9,15 @@
   
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ZCHAnalytics/cloud-resume-challenge.git"
+    "url": "https://github.com/ZCHAnalytics/resume-azuredevops-backend.git"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ZCHAnalytics/cloud-resume-challenge/issues"
+    "url": "https://github.com/ZCHAnalytics/resume-azuredevops-backend.git/issues"
   },
-  "homepage": "https://github.com/ZCHAnalytics/cloud-resume-challenge#readme",
+  "homepage": "https://github.com/ZCHAnalytics/resume-azuredevops-backend.git#readme",
   "description": "",
   "devDependencies": {
     "cypress": "^14.5.1"

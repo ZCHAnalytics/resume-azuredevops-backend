@@ -1,13 +1,13 @@
 describe('Cloud Resume E2E', () => {
-  const baseUrl = 'https://shecodesclouds.azureedge.net';
-  const apiUrl = 'https://zch-resume-function-app.azurewebsites.net/api/VisitorCounter';
+  const baseUrl = 'https://ubds-resume.azureedge.net';
+  const apiUrl = 'https://ubds-func-app.azurewebsites.net/api/VisitorCounter';
   
   // Generate a unique visitor ID for testing
   const testVisitorId = `cypress-test-${Date.now()}`;
   
   it('serves the static resume', () => {
     cy.visit('/')                       // uses baseUrl
-    cy.contains('Zulfia').should('be.visible')
+    cy.contains('UBDS').should('be.visible')
   })
 
   it('gets the visitor count from API', () => {
