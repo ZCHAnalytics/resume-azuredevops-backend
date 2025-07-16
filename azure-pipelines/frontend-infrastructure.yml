@@ -17,7 +17,7 @@ trigger:
       - 'frontend/iaac/**'                               # Trigger only when infra files change
       - 'azure-pipelines/frontend-infrastructure.yml'
 
-# 🏗️ Agent Pool
+# Agent Pool
 pool:
   name: 'Default'
 
