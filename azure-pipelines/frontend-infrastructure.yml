@@ -252,6 +252,7 @@ stages:
             environmentServiceNameAzureRM: 'ubds-sp-connection'
             workingDirectory: '$(terraformWorkingDir)'
 
+
         # 🚀 Apply the planned Terraform changes
         - task: TerraformTaskV4@4
           displayName: '🚀 Terraform Apply'
